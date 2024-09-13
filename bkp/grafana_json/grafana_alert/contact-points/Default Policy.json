@@ -1,0 +1,1 @@
+{"uid": "tM-_NoKGk", "name": "Default Policy", "type": "webhook", "settings": {"httpMethod": "POST", "url": "http://10.12.111.1:5000/grafana", "token": ""}, "disableResolveMessage": false}

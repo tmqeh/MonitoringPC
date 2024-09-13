@@ -1,0 +1,16 @@
+CREATE function [dbo].[ufn_ShowGrafanaTime] (@inputDTM datetime, @gbn varchar(1))
+returns datetime
+AS
+BEGIN
+declare @returnDTM datetime;
+
+-- where clause
+if @gbn = 'O' 
+    set @returnDTM = convert(datetime, @inputDTM ) AT TIME ZONE 'UTC' AT TIME ZONE 'UTC' 
+
+-- select clause
+else if @gbn = 'I'
+    set @returnDTM = convert(datetime, @inputDTM ) AT TIME ZONE 'UTC'  AT TIME ZONE 'Korea Standard Time'
+
+return @returnDTM;
+END

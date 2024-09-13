@@ -1,0 +1,1 @@
+{"name": "labelsloop", "template": "{{ define \"labelsloop\" }}\r\n\r\n{{ range .Labels.SortedPairs }}\r\n  {{ .Name }} = {{ .Value }}\r\n{{ end }}\r\n\r\n{{ end }}"}

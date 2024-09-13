@@ -1,0 +1,4 @@
+call ldsisdb01_ora_alert.bat
+call lpbatap01_ora_alert.bat
+call lpbatap02_ora_alert.bat
+call hrdev_ora_alert.bat

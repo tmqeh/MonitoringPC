@@ -1,0 +1,1 @@
+{"uid": "e583f779-7bd0-489c-adad-55205ecfc612", "name": "[DRM] Jandi Noti", "type": "webhook", "settings": {"httpMethod": "POST", "url": "http://10.12.111.1:5000/grafana", "token": ""}, "disableResolveMessage": false}

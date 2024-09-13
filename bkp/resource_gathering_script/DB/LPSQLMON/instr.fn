@@ -1,0 +1,31 @@
+
+
+CREATE FUNCTION dbo.instr(@str varchar(8000), @patten varchar(100), @start int=1, @cnt int=1)
+returns int
+AS
+/*
+@str 문자열
+@patten 찾을 패턴
+@start : 시작 포인터
+@cnt : n번째 반복되는 패턴 위치를 찾기 위한 횟수 지정
+*/
+BEGIN
+ DECLARE @i int, @j int, @k int, @l int
+ SET @i=1
+ SET @j = @start - 1
+ SET @k = 0
+ SET @l = datalength(@patten)
+ SET @str = substring(@str, @start, 8000)
+ 
+ WHILE(@i <= @cnt)
+ BEGIN
+  SET @k = charindex(@patten, @str)
+  IF @k = 0
+   break
+  SET @j = @j + @k
+  SET @str = substring(@str, @k+@l, 8000)
+  SET @i = @i + 1
+ END
+
+ return(case when @k=0 then @k else @j + (@cnt-1) * (@l-1) end)
+END

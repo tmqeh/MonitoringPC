@@ -1,0 +1,1 @@
+{"name": "alertsloop", "template": "{{ define \"alertsloop\"}}\r\n{{ range .Alerts }}\r\n  Status: {{ .Status }}\r\n  Starts at: {{ .StartsAt }}\r\n  Lables : {{ .Labels }}\r\n  ValueString : {{ or .ValueString \"[no value]\" }}\r\n  Values : {{ .Values }}\r\n\r\n{{ end }}\r\n{{ end }}"}

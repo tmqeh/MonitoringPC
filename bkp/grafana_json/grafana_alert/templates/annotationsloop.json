@@ -1,0 +1,1 @@
+{"name": "annotationsloop", "template": "{{ define \"annotationsloop\"}}\r\n{{ range .Annotations.SortedPairs }}\r\n  {{ .Name }} = {{ .Value }}\r\n{{ end }}\r\n{{ end }}"}

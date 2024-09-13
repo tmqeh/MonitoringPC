@@ -1,0 +1,2 @@
+call LOTTEHRS2_dr_chk
+call ldsisdb01_dr_chk

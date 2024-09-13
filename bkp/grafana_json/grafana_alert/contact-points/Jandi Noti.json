@@ -1,0 +1,1 @@
+{"uid": "c0fc1836-88bc-470c-810f-685ef03fd636", "name": "Jandi Noti", "type": "webhook", "settings": {"httpMethod": "POST", "url": "http://10.12.111.1:5000/grafana", "token": ""}, "disableResolveMessage": false}

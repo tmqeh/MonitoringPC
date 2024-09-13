@@ -1,0 +1,1 @@
+{"uid": "a775f346-5131-480d-ad5f-b3b7063642ec", "name": "DBA Slack Noti (Img)", "type": "slack", "settings": {"recipient": "D041DMDCESV", "text": "{{ template \"callBotImage\" . }}", "title": "{{ template \"titleTemplate\" . }}", "token": "", "username": "Grafana \ubaa8\ub2c8\ud130\ub9c1 (Img)"}, "disableResolveMessage": true}

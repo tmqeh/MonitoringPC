@@ -1,0 +1,97 @@
+USE [msdb]
+GO
+
+/****** Object:  Job [[DBA]Get_Rds_Monthly_Report_L]    Script Date: 2022-02-11 오전 9:37:14 ******/
+BEGIN TRANSACTION
+DECLARE @ReturnCode INT
+SELECT @ReturnCode = 0
+/****** Object:  JobCategory [[Uncategorized (Local)]]    Script Date: 2022-02-11 오전 9:37:14 ******/
+IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'[Uncategorized (Local)]' AND category_class=1)
+BEGIN
+EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'[Uncategorized (Local)]'
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+
+END
+
+DECLARE @jobId BINARY(16)
+EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'[DBA]Get_Rds_Monthly_Report_L', 
+		@enabled=1, 
+		@notify_level_eventlog=0, 
+		@notify_level_email=0, 
+		@notify_level_netsend=0, 
+		@notify_level_page=0, 
+		@delete_level=0, 
+		@description=N'설명이 없습니다.', 
+		@category_name=N'[Uncategorized (Local)]', 
+		@owner_login_name=N'lpdbadmin', @job_id = @jobId OUTPUT
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+/****** Object:  Step [S]    Script Date: 2022-02-11 오전 9:37:14 ******/
+EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'S', 
+		@step_id=1, 
+		@cmdexec_success_code=0, 
+		@on_success_action=1, 
+		@on_success_step_id=0, 
+		@on_fail_action=2, 
+		@on_fail_step_id=0, 
+		@retry_attempts=0, 
+		@retry_interval=0, 
+		@os_run_priority=0, @subsystem=N'TSQL', 
+		@command=N'INSERT INTO [MonitoringDB].[dbo].[TB_Rds_Monthly_Report_L]
+( CollectDT, CollectHH, ServerHost, CPU_PCT
+, Storage_TOT_GB, Storage_Free_GB, Storage_Use_GB, Storage_Used_PCT
+, MEM_TOT_GB, MEM_Free_GB, MEM_Use_GB, MEM_Used_PCT
+, Read_IOPS, Write_IOPS, TOT_IOPS
+)
+select b.CollectDT, b.CollectHH, a.ServerHost
+     -- CPU
+     , isnull(MAX(case when Rsrc_Name = ''CPUUtilization'' then Rsrc_Val end),0) CPU_PCT
+     -- Storage
+     , MIN(a.Storage_Size_GB) as Storage_TOT_GB
+     , MIN(CAST(ROUND(case when Rsrc_Name = ''FreeStorageSpace'' then Rsrc_Val end /1024/1024/1024,0) as INT)) as Storage_Free_GB
+     , MIN(a.Storage_Size_GB) - MIN(CAST(ROUND(case when Rsrc_Name = ''FreeStorageSpace'' then Rsrc_Val end/1024/1024/1024,0) as INT)) as Storage_Use_GB
+     , CAST((MIN(a.Storage_Size_GB) - MIN(ROUND(case when Rsrc_Name = ''FreeStorageSpace'' then Rsrc_Val end/1024/1024/1024,0))) / MIN(a.Storage_Size_GB) * 100 as DECIMAL(10,2)) as Storage_Used_PCT
+     -- Memory
+     , MIN(c.Memory_GB) as MEM_TOT_GB
+     , MIN(CAST(ROUND(case when Rsrc_Name = ''FreeableMemory'' then Rsrc_Val end/1024/1024/1024,0) as INT)) as MEM_Free_GB
+     , MIN(c.Memory_GB) - MIN(CAST(ROUND(case when Rsrc_Name = ''FreeableMemory'' then Rsrc_Val end/1024/1024/1024,0) as INT)) as MEM_Use_GB
+     , CAST((MIN(c.Memory_GB) - MIN(ROUND(case when Rsrc_Name = ''FreeableMemory'' then Rsrc_Val end/1024/1024/1024,0))) / MIN(c.Memory_GB) * 100 as DECIMAL(10,2)) as MEM_Used_PCT
+     -- IOPS
+     , MAX(case when Rsrc_Name = ''ReadIOPS'' then Rsrc_Val end) as Read_IOPS
+     , MAX(case when Rsrc_Name = ''WriteIOPS'' then Rsrc_Val end) as Write_IOPS
+     , MAX(case when Rsrc_Name = ''ReadIOPS'' then Rsrc_Val end) + MAX(case when Rsrc_Name = ''WriteIOPS'' then Rsrc_Val end) as TOT_IOPS
+  from [dbo].[TB_Rds_Comm_Info_M] a, [dbo].[TB_Rds_Rsrc_L] b, [dbo].[TB_Rds_Class_Info_M] c
+ where 1=1
+   AND a.ServerHost  = b.ServerHost
+   AND a.ServerClass = c.ServerClass
+   AND b.CollectDT = CONVERT(VARCHAR, GETDATE(), 112)
+GROUP BY b.CollectDT, b.CollectHH, a.ServerHost
+ORDER BY 3 DESC, 2', 
+		@database_name=N'MonitoringDB', 
+		@flags=0
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'Daily', 
+		@enabled=1, 
+		@freq_type=4, 
+		@freq_interval=1, 
+		@freq_subday_type=1, 
+		@freq_subday_interval=0, 
+		@freq_relative_interval=0, 
+		@freq_recurrence_factor=0, 
+		@active_start_date=20200811, 
+		@active_end_date=99991231, 
+		@active_start_time=235500, 
+		@active_end_time=235959, 
+		@schedule_uid=N'64720ec2-32f6-46f4-a9ea-b0d9950f2e19'
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_add_jobserver @job_id = @jobId, @server_name = N'(local)'
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+COMMIT TRANSACTION
+GOTO EndSave
+QuitWithRollback:
+    IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
+EndSave:
+GO
+
+
