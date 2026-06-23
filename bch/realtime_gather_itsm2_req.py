@@ -167,7 +167,7 @@ def get_list(driver, url2):
         return response
         
     except Exception as e:
-        print(f"❌ 데이터 수집 중 오류 발생: {e}")
+        print(f"❌ 데이터 수집 중 오류  발생: {e}")
         print(f"   현재 URL: {driver.current_url}")
         raise
 
