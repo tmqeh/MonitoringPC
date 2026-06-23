@@ -60,7 +60,7 @@ def get_json_data(key, host, api):
                 export_json_data(file_path, data)
 
     except Exception as e:
-        msgr.put_msgr_target("daily_backup_grafana_alert_template get_json_data except : ", grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target("daily_backup_grafana_alert_template get_json_data except : ", grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
 
 if __name__ == "__main__":
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         get_json_data(cnf.GRAFANA_API, HOST,  POLICY_API      )
 
     except yaml.YAMLError as e:
-        msgr.put_msgr_target("daily_backup_grafana_alert_template yaml except : " + str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target("daily_backup_grafana_alert_template yaml except : " + str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
     except Exception as e:
-        msgr.put_msgr_target("daily_backup_grafana_alert_template except : " + str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target("daily_backup_grafana_alert_template except : " + str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 

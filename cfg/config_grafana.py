@@ -1,7 +1,7 @@
 # for grafana
 GRAFANA_API = "eyJrIjoic21FdzNEcldCdmRIRVFzQ2p2VFJXMGlYYkt5RWVvTkkiLCJuIjoiQVdTX2dyYWZhbmEiLCJpZCI6MX0="
-GRAFANA_URL = "http://10.12.111.1:3000/render/d-solo"
-GRAFANA_HOST = "http://10.12.111.1:3000"
+GRAFANA_URL = "https://dbagrafana.dpt.co.kr:3000/render/d-solo"
+GRAFANA_HOST = "https://dbagrafana.dpt.co.kr:3000"
 
 TEMPLATE_API     = "/api/v1/provisioning/templates"
 ALERTRULE_API    = "/api/v1/provisioning/alert-rules"

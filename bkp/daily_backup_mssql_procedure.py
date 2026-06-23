@@ -47,7 +47,7 @@ def get_mssql_procedure(args):
 
     except Exception as e:
         # print("get_mssql_procedure except : " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
     finally:
         conn.close()
@@ -70,4 +70,4 @@ if __name__ == "__main__":
                     f.close()
 
     except Exception as e:
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())

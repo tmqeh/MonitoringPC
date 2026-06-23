@@ -4,18 +4,25 @@ import datetime
 import cmn.common_msgr as msgr
 from cmn.common import get_cur_func_nm as func_nm, get_cur_file_nm as file_nm, get_func_tree as func_tree
 from cmn.common_db import psysql, monDB, monPC, maxgDB, metaDB, batDB
-from cmn.common_datetime import YMDHH24MISS
+from cmn.common_datetime import YMD, YMDHH24MISS
+from cmn.common_datetime import YESTERDAY_YMDHH24MISS
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------        
-def list_ora_err(args=YMDHH24MISS):
-    print("ORAError " + args)
+def list_ora_err(args=YMDHH24MISS, args2=YMD):
+    # print("ORAError " + args)
     # postgresql (maxg)
 
     try:
         conn = None
+        conn2 = None
+
         conn = maxgDB(func_nm())
+        conn2 = monDB()
+
         sqlTxt = ""
+        sqlTxt2 = ""
+        sqlTxt3 = ""
         
         inst_list = ["lpsis1","lpsis2","lottehrs1","lottehrs2"]
 
@@ -36,6 +43,8 @@ def list_ora_err(args=YMDHH24MISS):
                               psysql.Identifier("ora_alertlog_history"),
                               psysql.Identifier(args)
                           )
+            
+            
 
             # print(sqlTxt)
             data = conn.query(sqlTxt)
@@ -46,26 +55,94 @@ def list_ora_err(args=YMDHH24MISS):
                 
                 content=""
                 for sms_txt in result :
-                    content = content + "일시 : " + sms_txt["time"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
-                    content = content + "서버 : " + sms_txt["inst_id"] + "\n"
-                    content = content + "내용 : \n```\n" + sms_txt["err_detail"] + "\n```"
+                    content = content + "# 일시 : " + sms_txt["time"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
+                    content = content + "# 서버 : " + sms_txt["inst_id"] + "\n\n"
+                    content = content + '[Error Log]' +'\n'
+                    content = content + sms_txt["err_detail"]
                     # print(content)
                     # msgr.put_msgr_target(content, "DB0001")
-                    msgr.put_msgr_target(content, grp_cd="DB0003", send_title="**" + func_nm() + "**", msgr_color="RED")
+                    msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="[Error] Oracle Alert", msgr_color="Attention", send_funcnm=func_nm())
                     
                     content="\n"
 
+
+        sqlTxt2 = """/* [실시간] 락모니터링 추가 */
+                     SELECT CollectDT         [수집시간]
+                           ,HOSTNAME          [시스템명]
+                           ,WAIT_TIME         [락지속시간(s)]
+                           ,BLOCKED_SESSION   [BLOCKED SESSION]
+                           ,BLOCKED_SQL_ID    [BLOCKED SQLID]
+                           ,BLOCKED_SQL_TEXT  [BLOCKED SQLTEXT]
+                           ,HOLDING_SESSION   [HOLDING SESSION]
+                           ,HOLDING_SQL_ID    [HOLDING SQLID]
+                           ,HOLDING_SQL_TEXT  [HOLDING SQLTEXT]
+                           ,EVENT             [EVENT]
+                           ,COMMAND           [KILL COMMAND]
+                       FROM [dbo].[TB_Ora_Lock_Chk_L]
+                      WHERE 1=1
+                        AND CollectDT > '{}'
+                        AND WAIT_TIME > 60 --LOCK TIME 60초 이상                        
+                        AND SEND_YN = 'N'
+                      """.format(args2)
+           
+        data2 = conn2.query(sqlTxt2)
+
+        if conn2.rows() > 0:
+            result2 = [dict((conn2.description()[i][0], value) \
+                            for i, value in enumerate(row)) for row in data2]
+                        
+            for sms_txt2 in result2 :
+                content = ""
+                content = content + "# 일시 : " + sms_txt2["수집시간"] + "\n"
+                content = content + "# 서버 : " + sms_txt2["시스템명"] + "\n"
+                content = content + "# 락지속시간(s) : " + str(sms_txt2["락지속시간(s)"]) + "\n\n"
+                
+                content = content + "**■ HOLDING**" + "\n"
+                content = content + "# SESSION : " + str(sms_txt2["HOLDING SESSION"]) + "\n"
+                content = content + "# SQLID   : " + str(sms_txt2["HOLDING SQLID"]) + "\n\n"
+                content = content + "# [SQLTEXT] " +"\n" + str(sms_txt2["HOLDING SQLTEXT"]) + "\n\n"
+
+                content = content + "**▶ BLOCKED**" + "\n"
+                content = content + "# SESSION : " + str(sms_txt2["BLOCKED SESSION"]) + "\n"
+                content = content + "# SQLID   : " + str(sms_txt2["BLOCKED SQLID"]) + "\n"
+                content = content + "# EVENT   : " + str(sms_txt2["EVENT"]) + "\n\n"     
+                content = content + "# [SQLTEXT] " +"\n" + str(sms_txt2["BLOCKED SQLTEXT"]) + "\n\n"
+                                           
+                content = content + "# KILL COMMAND : " + str(sms_txt2["KILL COMMAND"]) + "\n"   
+
+                sqlTxt3 = """
+                          UPDATE dbo.TB_Ora_Lock_Chk_L 
+                          SET SEND_YN ='Y' 
+                          WHERE SEND_YN = 'N' 
+                          AND CollectDT = %s
+                          AND HOSTNAME = %s
+                          AND HOLDING_SESSION = %s
+                          AND BLOCKED_SESSION = %s
+                          """
+                
+                CollectDT = str(sms_txt2["수집시간"])
+                HOSTNAME = str(sms_txt2["시스템명"])
+                HOLDING_SESSION = str(sms_txt2["HOLDING SESSION"])
+                BLOCKED_SESSION = str(sms_txt2["BLOCKED SESSION"])
+
+                conn2.execute(sqlTxt3, (CollectDT, HOSTNAME, HOLDING_SESSION, BLOCKED_SESSION))
+                conn2.commit()
+           
+                msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="Oracle Lock", msgr_color="Attention", send_funcnm=func_nm())                
+                
+
     except Exception as e:
-        # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] Oracle Alert", msgr_color="Attention", send_funcnm=func_nm())
         
     finally:
         if conn:
             conn.close()
-
+        if conn2:
+            conn2.close()      
+    
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def list_ms_err(args=YMDHH24MISS):
+def list_ms_err(args=YMDHH24MISS, args2=YESTERDAY_YMDHH24MISS):
     print("MSError " + args)
 
     try:
@@ -101,8 +178,9 @@ def list_ms_err(args=YMDHH24MISS):
                                             FROM [dbo].[TBL2_M_AgentJobInfo] AS B with (nolock)
                                            WHERE A.InstanceID = B.InstanceID
                                              AND B.CollectDate  >= '{}' -- 날짜 부분 변수로 들어 갈 수 있도록
+                                             AND B.LastRunDateTime  >= '{}' -- 날짜 부분 변수로 들어 갈 수 있도록
                                              AND B.Enabled = 'Y'
-                                             AND B.LastRunStatus in ('Failed','Warnig')
+                                             AND B.LastRunStatus in ('Failed','Warning')
                                          ) B
                                     WHERE B.ROWNUM = 1
                                    ) B
@@ -111,7 +189,7 @@ def list_ms_err(args=YMDHH24MISS):
                        AND A.InstanceID <> 1
                        -- 20240401 jyh 추가
                        AND B.JobName not like '%SQLServerMonitor%'
-                       AND B.CollectDate  >= '{}' -- 날짜 부분 변수로 들어 갈 수 있도록  """.format(args[0:10],args)
+                       AND B.CollectDate  >= '{}' -- 날짜 부분 변수로 들어 갈 수 있도록  """.format(args[0:10],args2[0:10],args)
 
         sqlTxt2 = """/* [상세] SQL Error log 목록 */
                     SELECT distinct A.InstanceID, A.ServerName
@@ -210,13 +288,14 @@ def list_ms_err(args=YMDHH24MISS):
             
             content=""
             for sms_txt in result :
-                content = content + "일시 : " + sms_txt["LastRunDateTime"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
-                content = content + "서버 : " + sms_txt["ServerName"] + "\n"
-                content = content + "내용 : \n```\n" + sms_txt["JobName"] + sms_txt["LastRunStatusMessage"] + "\n```"
+                content = content + "# 일시 : " + sms_txt["LastRunDateTime"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
+                content = content + "# 서버 : " + sms_txt["ServerName"] + "\n\n"
+                content = content + '[Error Log]' +'\n'
+                content = content + sms_txt["JobName"] + sms_txt["LastRunStatusMessage"]
                 # print(content)
                 # msgr.put_msgr_target(content, "DB0001")
-                msgr.put_msgr_target(content, grp_cd="DB0003", send_title="**" + func_nm() + "**", msgr_color="RED")
-                content="\n"
+                msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="MSSQL Job Fail", msgr_color="Attention", send_funcnm=func_nm())
+                # content="\n"
 
         # print(sqlTxt2)
         data2 = conn2.query(sqlTxt2)
@@ -227,13 +306,14 @@ def list_ms_err(args=YMDHH24MISS):
             
             content=""
             for sms_txt2 in result2 :
-                content = content + "일시 : " + sms_txt2["LOG_DATE"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
-                content = content + "서버 : " + sms_txt2["ServerName"] + "\n"
-                content = content + "내용 : \n```\n" + sms_txt2["PROCESS_INFO"] + sms_txt2["ERRORLOG_TEXT"] + "\n```"
+                content = content + "# 일시 : " + sms_txt2["LOG_DATE"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
+                content = content + "# 서버 : " + sms_txt2["ServerName"] + "\n\n"
+                content = content + '[Error Log]' +'\n'
+                content = content + sms_txt2["PROCESS_INFO"] + sms_txt2["ERRORLOG_TEXT"]
                 # print(content)
                 # msgr.put_msgr_target(content, "DB0001")
-                msgr.put_msgr_target(content, grp_cd="DB0003", send_title="**" + func_nm() + "**", msgr_color="RED")
-                content="\n"
+                msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="MSSQL Error Log", msgr_color="Attention", send_funcnm=func_nm())
+                # content="\n"
                 
         # print(sqlTxt3)
         data3 = conn3.query(sqlTxt3)
@@ -244,17 +324,18 @@ def list_ms_err(args=YMDHH24MISS):
             
             content=""
             for sms_txt3 in result3 :
-                content = content + "일시 : " + sms_txt3["수집시간"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
-                content = content + "서버 : " + sms_txt3["시스템명"].encode("ISO-8859-1").decode("euc-kr") + "(" +  str(sms_txt3["인스턴스ID"])+ ")" + "\n"
-                content = content + "락지속시간(s) : " + str(sms_txt3["락지속시간(s)"]) + "\n"
+                content = content + "# 일시 : " + sms_txt3["수집시간"].strftime("%Y-%m-%d %H:%M:%S") + "\n"
+                content = content + "# 서버 : " + sms_txt3["시스템명"].encode("ISO-8859-1").decode("euc-kr") + "(" +  str(sms_txt3["인스턴스ID"])+ ")" + "\n"
+                content = content + "# 락지속시간(s) : " + str(sms_txt3["락지속시간(s)"]) + "\n"
                 
-                content = content + "타입 : " + str(sms_txt3["타입"]) + "\n"
+                content = content + "# 타입 : " + str(sms_txt3["타입"]) + "\n"
                 if sms_txt3["오브젝트명"]:
-                    content = content + "오브젝트명 : " + str(sms_txt3["오브젝트명"]) + "\n"
+                    content = content + "# 오브젝트명 : " + str(sms_txt3["오브젝트명"]) + "\n"
                 if sms_txt3["호스트명"]:
-                    content = content + "호스트명 : " + str(sms_txt3["호스트명"]) + "\n"
-                content = content + "대기정보 : " + str(sms_txt3["대기정보"]) + "\n\n"
-                content = content + "SQL_TEXT : \n```\n" + str(sms_txt3["SQL_TEXT"]).replace("\x00","") + "\n```"
+                    content = content + "# 호스트명 : " + str(sms_txt3["호스트명"]) + "\n"
+                content = content + "# 대기정보 : " + str(sms_txt3["대기정보"]) + "\n\n"
+                content = content + "[SQL_TEXT]" + "\n" 
+                content = content + str(sms_txt3["SQL_TEXT"]).replace("\x00","")
                 # print(content)
                 # msgr.put_msgr_target(content, "DB0001")
                 
@@ -262,16 +343,16 @@ def list_ms_err(args=YMDHH24MISS):
                 if sms_txt3["시스템명"].encode("ISO-8859-1").decode("euc-kr")== "[인프라] DRM":
                     if datetime.datetime.now().strftime("%H%M%S") >= "090000" and datetime.datetime.now().strftime("%H%M%S") <= "235959":
                         # msgr.put_msgr_target(content, "DB0001")
-                        msgr.put_msgr_target(content, grp_cd="DB0003", send_title="**" + func_nm() + "**", msgr_color="RED")
-                        msgr.put_msgr_target(content, grp_cd="NW0001",send_title="DRM Lock 모니터링", msgr_color="RED")
+                        msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="MSSQL Lock", msgr_color="Attention", send_funcnm=func_nm())
+                        msgr.put_msgr_target(content, grp_cd="NW0001",send_title="DRM Lock 모니터링", msgr_color="Attention", send_funcnm=func_nm())
                 else:
                     # msgr.put_msgr_target(content, "DB0001")
-                    msgr.put_msgr_target(content, grp_cd="DB0003", send_title="**" + func_nm() + "**", msgr_color="RED")
-                content="\n"
+                    msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="MSSQL Lock", msgr_color="Attention", send_funcnm=func_nm())
+                # content="\n"
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] MSSQL Alert", msgr_color="Attention", send_funcnm=func_nm())
         
     finally:
         if conn:
@@ -312,23 +393,23 @@ def list_meta_sec_check(args=YMDHH24MISS):
             for sms_txt in result :
                 content=""
 
-                content = content + "항목구분 : " + sms_txt["항목구분"]  + "\n"
-                content = content + "신청구분 : " + sms_txt["신청구분"]  + "\n"
-                content = content + "시스템 : "   + sms_txt["시스템"]    + "\n"
-                content = content + "업무구분 : " + sms_txt["업무구분"]  + "\n"
-                content = content + "항목명 : "   + sms_txt["항목명"]    + "\n"
-                content = content + "도메인 : "   + sms_txt["도메인"]    + "\n"
-                content = content + "정의 : "     + sms_txt["정의"]      + "\n"
-                content = content + "신청자 : "   + sms_txt["신청자"]    + "\n"
-                content = content + "승인일시 : " + sms_txt["승인일시"]  + "\n"# .strftime("%Y-%m-%d %H:%M:%S") + "\n"
+                content = content + "# 항목구분 : " + sms_txt["항목구분"]  + "\n"
+                content = content + "# 신청구분 : " + sms_txt["신청구분"]  + "\n"
+                content = content + "# 시스템 : "   + sms_txt["시스템"]    + "\n"
+                content = content + "# 업무구분 : " + sms_txt["업무구분"]  + "\n"
+                content = content + "# 항목명 : "   + sms_txt["항목명"]    + "\n"
+                content = content + "# 도메인 : "   + sms_txt["도메인"]    + "\n"
+                content = content + "# 정의 : "     + sms_txt["정의"]      + "\n"
+                content = content + "# 신청자 : "   + sms_txt["신청자"]    + "\n"
+                content = content + "# 승인일시 : " + sms_txt["승인일시"]  + "\n"# .strftime("%Y-%m-%d %H:%M:%S") + "\n"
                 # print(content)
                 
-                msgr.put_msgr_target(content, "DB0005", send_title="**[마스킹 체크]**", msgr_color="GRAY") # 처리할게 없어서 GRAY
-                msgr.put_msgr_target(content, grp_cd="SC0001", send_title="**[마스킹 체크]**", msgr_color="YELLOW")
+                msgr.put_msgr_target(content, "DBWX05", send_title="Metastream 마스킹 체크", msgr_color="GRAY", send_funcnm=func_nm()) # 처리할게 없어서 GRAY
+                msgr.put_msgr_target(content, grp_cd="SC0001", send_title="Metastream 마스킹 체크", msgr_color="YELLOW", send_funcnm=func_nm())
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] 마스킹 체크", msgr_color="Attention", send_funcnm=func_nm())
         # pass
     
     finally:
@@ -385,12 +466,12 @@ def list_ms_trace(args=YMDHH24MISS):
                 content = content + "상세쿼리 : \n```\n" + sms_txt["SQL_TEXT"] + "\n```"
                 # print(content)
                 # msgr.put_msgr_target(content, "DB0001")
-                msgr.put_msgr_target(content, grp_cd="DB0003", send_title="**" + func_nm() + "**", msgr_color="ORANGE")
+                msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="Trace(Profile) 모니터링", msgr_color="ORANGE", send_funcnm=func_nm())
                 content="\n"
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] Trace(Profile) 모니터링", msgr_color="Attention", send_funcnm=func_nm())
     
     finally:
         if conn:
@@ -430,12 +511,12 @@ def check_bat_inst():
                 content = content + "내용 : " + sms_txt["STATUS"]
                 # print(content)
                 # msgr.put_msgr_target(content, "DB0001")
-                msgr.put_msgr_target(content, grp_cd="DB0003", send_title="**" + func_nm() + "**", msgr_color="RED")
+                msgr.put_msgr_target(content, grp_cd="DBWX03", send_title="배치DB 기동 모니터링", msgr_color="RED", send_funcnm=func_nm())
                 content="\n"
                     
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] 배치DB 기동 모니터링", msgr_color="Attention", send_funcnm=func_nm())
         pass
     
     finally:
@@ -491,16 +572,17 @@ def list_meta_appr(args=YMDHH24MISS):
             result = [dict((conn.description()[i][0], value) \
                             for i, value in enumerate(row)) for row in data]
 
-            content="[모델표준화]\n"
+            content=""
             for sms_txt in result :
-                content = content + "시스템 : "         + sms_txt["시스템"]         + "\n"
-                content = content + "업무구분 : "       + sms_txt["업무구분"]       + "\n"
-                content = content + "결재 대기 라인 : " + sms_txt["결재 대기 라인"] + "\n"
-                content = content + "건수 : " + str(sms_txt["건수"]) #+ "\n"
+                content = content + "**" + "모델 신청" + "**\n"
+                content = content + "# 시스템 : "         + sms_txt["시스템"]         + "\n"
+                content = content + "# 업무구분 : "       + sms_txt["업무구분"]       + "\n"
+                content = content + "# 결재 대기 라인 : " + sms_txt["결재 대기 라인"] + "\n"
+                content = content + "# 건수 : " + str(sms_txt["건수"]) #+ "\n"
                 # print(content)
                 # msgr.put_msgr_target(content, "DB0001")
-                msgr.put_msgr_target(content, grp_cd="DB0005", send_title="**" + func_nm() + "**", msgr_color="YELLOW")
-                content="[모델표준화]\n"                    
+                msgr.put_msgr_target(content, grp_cd="DBWX05", send_title="Metastream 요청", msgr_color="Good", send_funcnm=func_nm())
+                content=""                    
         
         data2 = conn2.query(sqlTxt2, [args])
 
@@ -508,27 +590,27 @@ def list_meta_appr(args=YMDHH24MISS):
             result2 = [dict((conn2.description()[i][0], value) \
                             for i, value in enumerate(row)) for row in data2]
 
-            content="[데이터표준화]\n"
+            content=""
             for sms_txt2 in result2 :
-                if sms_txt2["시스템"]:
-                    content = content + "시스템 : "     + sms_txt2["시스템"]         + "\n"
-                if sms_txt2["업무구분"]:
-                    content = content + "업무구분 : "   + sms_txt2["업무구분"]       + "\n"
                 if sms_txt2["항목구분"]:
-                    content = content + "항목구분 : "   + sms_txt2["항목구분"]       + "\n"
-                else:
-                    content = content + "항목구분 : "   + "단어"       + "\n"
+                    content = content + "**" + "데이터표준화 - " + sms_txt2["항목구분"]       + "**\n"
 
-                content = content + "결재 대기 라인 : " + sms_txt2["결재 대기 라인"] + "\n"
-                content = content + "건수 : " + str(sms_txt2["건수"]) #+ "\n"
+                if sms_txt2["시스템"]:
+                    content = content + "# 시스템 : "     + sms_txt2["시스템"]         + "\n"
+                    
+                if sms_txt2["업무구분"]:
+                    content = content + "# 업무구분 : "   + sms_txt2["업무구분"]       + "\n"
+
+                content = content + "# 결재 대기 라인 : " + sms_txt2["결재 대기 라인"] + "\n"
+                content = content + "# 건수 : " + str(sms_txt2["건수"]) #+ "\n"
                 # print(content)
                 # msgr.put_msgr_target(content, "DB0001")
-                msgr.put_msgr_target(content, grp_cd="DB0005", send_title="**" + func_nm() + "**", msgr_color="YELLOW")
-                content="[데이터표준화]\n"
+                msgr.put_msgr_target(content, grp_cd="DBWX05", send_title="Metastream 요청", msgr_color="Good", send_funcnm=func_nm())
+                content=""
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] Metastream", msgr_color="Attention", send_funcnm=func_nm())
         # pass
     
     finally:
@@ -572,24 +654,23 @@ def list_netbackup_err(args=YMDHH24MISS):
             result = [dict((conn.description()[i][0], value) \
                             for i, value in enumerate(row)) for row in data]
 
-            content="\n"
+            content=""
             for sms_txt in result :
-                content = content + "일시 : "         + sms_txt["Ended"] + "\n"
-                content = content + "잡아이디 : "     + str(sms_txt["JobID"]) + "\n"
-                content = content + "클라이언트명 : " + sms_txt["Client"] + "\n"
-                content = content + "스케줄명 : "     + sms_txt["Schedule"] + "\n"
-                content = content + "정책명 : "       + sms_txt["Policy"] + "\n"
-                content = content + "소요시간 : "     + str(sms_txt["Elapsed"]) + "\n"
-                content = content + "상태값 : "       + sms_txt["Status"] + "\n"
-                content = content + "미디어서버명 : " + sms_txt["Dest_Media_Svr"] + "(" + sms_txt["Dest_StUnit"] + ")" + "\n" 
+                content = content + "# 일시 : "         + sms_txt["Ended"] + "\n"
+                content = content + "# 잡아이디 : "     + str(sms_txt["JobID"]) + "\n"
+                content = content + "# 클라이언트명 : " + sms_txt["Client"] + "\n"
+                content = content + "# 스케줄명 : "     + sms_txt["Schedule"] + "\n"
+                content = content + "# 정책명 : "       + sms_txt["Policy"] + "\n"
+                content = content + "# 소요시간 : "     + str(sms_txt["Elapsed"]) + "\n"
+                content = content + "# 상태값 : "       + sms_txt["Status"] + "\n"
+                content = content + "# 미디어서버명 : " + sms_txt["Dest_Media_Svr"] + "(" + sms_txt["Dest_StUnit"] + ")" + "\n" 
                 # print(content)
-                msgr.put_msgr_target(content, grp_cd="DB0003",send_title="netBackupChk", msgr_color="RED")
-                msgr.put_msgr_target(content, grp_cd="SE0001",send_title="netBackupChk", msgr_color="RED")
+                msgr.put_msgr_target(content, grp_cd="SEWX01",send_title="Netbackup Error", msgr_color="Attention", send_funcnm=func_nm())
                 content="\n"
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] Netbackup Error", msgr_color="Attention", send_funcnm=func_nm())
     
     finally:
         if conn:
@@ -610,7 +691,7 @@ def read_db_errors (args=YMDHH24MISS):
         
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(file_nm() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(file_nm() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] " + func_nm(), msgr_color="Attention", send_funcnm=func_nm())
         pass
 
         # it might have a gap 0 to 1 min

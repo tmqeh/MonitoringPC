@@ -48,7 +48,7 @@ def list_ems_svr_id(args=None):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
 
     finally:
         sqlTxt = ""
@@ -98,7 +98,7 @@ def insert_svr_rsrc_ems_l(args):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e) + "\n" + str(args) + "\n" + sqlTxt)
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e) + "\n" + str(args) + "\n" + sqlTxt, grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e) + "\n" + str(args) + "\n" + sqlTxt, grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
     finally:
         sqlTxt = ""
@@ -176,7 +176,7 @@ def insert_svr_fs_ems_l(args):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e) + "\n" + str(args) + "\n" + sqlTxt)
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e) + "\n" + str(args) + "\n" + sqlTxt, grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e) + "\n" + str(args) + "\n" + sqlTxt, grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
     finally:
         sqlTxt = ""
@@ -248,7 +248,7 @@ def get_ems_cpu_mem(target_resource_id, hostname, driver):
                 insert_svr_rsrc_ems_l(results)
     except Exception as e:
         print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
         pass
 
 
@@ -312,7 +312,7 @@ def get_ems_filesystem(target_resource_id, hostname, driver):
                 insert_svr_fs_ems_l(dataset_contents)
     except Exception as e:
         print(func_nm() + ": " + str(e))
-        # msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        # msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
         pass
         
 
@@ -324,7 +324,7 @@ def get_status(driver):
             return 0
     except Exception as e: # (socket.error, httplib2.CannotSendRequest):
         # print(func_nm() + ": " + str(e))
-        # msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        # msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
         return 0 # "Dead"
 
 
@@ -377,7 +377,7 @@ if __name__ == "__main__":
     
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
         pass
 
     finally:

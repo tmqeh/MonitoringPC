@@ -64,28 +64,28 @@ def get_infra_attendance_work_day():
 
             for sms_txt in result :
                 sms_txt['작성자']    =    sms_txt['작성자'].encode('ISO-8859-1').decode('euc-kr')# iso-8859-1
-                sms_txt['URL']       =       sms_txt['URL'].encode('ISO-8859-1').decode('euc-kr')
+                # sms_txt['URL']       =       sms_txt['URL'].encode('ISO-8859-1').decode('euc-kr')
                 sms_txt['파트']      =      sms_txt['파트'].encode('ISO-8859-1').decode('euc-kr')
                 # sms_txt['대휴']      =      sms_txt['대휴'].encode('ISO-8859-1').decode('euc-kr')
                 # sms_txt['년차/휴가'] = sms_txt['년차/휴가'].encode('ISO-8859-1').decode('euc-kr')
                 # sms_txt['교육']      =      sms_txt['교육'].encode('ISO-8859-1').decode('euc-kr')
                 # sms_txt['공가/기타'] = sms_txt['공가/기타'].encode('ISO-8859-1').decode('euc-kr')
-                content = content + '작성자 : '         + sms_txt['작성자']              + '\n'
-                content = content + 'URL : '            + sms_txt['URL']                 + '\n'
-                content = content + '파트 : '           + sms_txt['파트']                + '\n'
-                content = content + '총인원 : '         + str(sms_txt['총인원'])         + '\n'
-                content = content + '근무인원 : '       + str(sms_txt['근무인원'])       + '\n'
-                content = content + '휴무/교육 인원 : ' + str(sms_txt['휴무/교육 인원']) + '\n'
-                content = content + '대휴 : '           + sms_txt['대휴']                + '\n'
-                content = content + '년차/휴가 : '      + sms_txt['년차/휴가']           + '\n'
-                content = content + '교육 : '           + sms_txt['교육']                + '\n'
-                content = content + '공가/기타 : '      + sms_txt['공가/기타']           + '\n'
+                content = content + '# 작성자 : '         + sms_txt['작성자']              + '\n'
+                # content = content + '# URL : '            + sms_txt['URL']                 + '\n'
+                content = content + '# 파트 : '           + sms_txt['파트']                + '\n'
+                content = content + '# 총인원 : '         + str(sms_txt['총인원'])         + '\n'
+                content = content + '# 근무인원 : '       + str(sms_txt['근무인원'])       + '\n'
+                content = content + '# 휴무/교육 인원 : ' + str(sms_txt['휴무/교육 인원'])  + '\n'
+                content = content + '# 대휴 : '           + sms_txt['대휴']                + '\n'
+                content = content + '# 년차/휴가 : '      + sms_txt['년차/휴가']            + '\n'
+                content = content + '# 교육 : '           + sms_txt['교육']                + '\n'
+                content = content + '# 공가/기타 : '      + sms_txt['공가/기타']            + '\n'
                 # print(content)
-                msgr.put_msgr_target(content, "DB9993",send_title="근태현황",msgr_color="Yellow")
+                msgr.put_msgr_target(content, "DBWX99",send_title="인프라파트 근태현황",msgr_color="Accent", send_funcnm=func_nm())
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] 인프라파트 근태현황", msgr_color="Attention", send_funcnm=func_nm())
         # pass
     
     finally:
@@ -119,7 +119,7 @@ def get_infra_attendance_week_start():
                         -- 한주치를 보기 위해서 dummy_DT와 조인
                         -- WRITER를 체크하는 로직이 좀 부실함 (방안 고민중)
                         -- ※ WRITER : 근태일일보고 작성자 추출 (영업일 1째날에만 작성하면되는데 그때의 작성자 찾는게 잘안됨)
-                        -- ※ 영업일 1째날에만 해당쿼리 돌게 따로 체크로직 쿼리 만들꺼임
+                        -- ※ 영업일 1째날에만 해당쿼리 돌게 따로 체크로직 쿼리 만 들꺼임
                         SELECT Z.DT, Z.DT_DATE, Z.WK, D.TITLE as PART_NM, M.MEMBERNM as MEM_NM, M.MEMBERID
                             , MIN(CASE WHEN M.MEMBERID IN ('L05124','L06140','L02090','L04049') THEN NULL 
                                        WHEN W.ID IS NULL                                        THEN M.MEMBERID
@@ -203,17 +203,17 @@ def get_infra_attendance_week_start():
                 sms_txt['파트']      =      sms_txt['파트'].encode('ISO-8859-1').decode('euc-kr')
                 if i == 0:
                     writer=sms_txt['작성자']
-                    content='작성자 : ' + writer + '\n'
+                    content='# 작성자 : ' + writer + '\n'
                 if sms_txt['DT_DATE'] == sms_txt['근태 계획'].strip():
                     continue
                 else:
                     content = content + sms_txt['근태 계획'] + "\n"
                     
-            msgr.put_msgr_target(content, "DB9993",send_title="근태 계획",msgr_color="Purple")
+            msgr.put_msgr_target(content, "DBWX99",send_title="근태 계획",msgr_color="Accent", send_funcnm=func_nm())
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] 인프라파트 근태현황", msgr_color="Attention", send_funcnm=func_nm())
         # pass
     
     finally:
@@ -229,4 +229,4 @@ if __name__ == "__main__":
 
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="[Error] 인프라파트 근태현황", msgr_color="Attention", send_funcnm=func_nm())

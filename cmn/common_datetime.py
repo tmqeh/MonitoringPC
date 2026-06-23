@@ -14,6 +14,9 @@ YMDHH       = NOW.strftime("%Y-%m-%d %H")
 YMDHH24MI   = NOW.strftime("%Y-%m-%d %H:%M")
 YMDHH24MISS = NOW.strftime("%Y-%m-%d %H:%M:%S")
 
+YESTERDAY = (datetime.date.today() - datetime.timedelta(days=1))
+YESTERDAY_YMDHH24MISS = YESTERDAY.strftime("%Y-%m-%d %H:%M:%S")
+
 NETBACKUP_YMD = NOW.strftime("%Y-%m-%d")
 
 # monthly report

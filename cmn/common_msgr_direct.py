@@ -4,6 +4,7 @@ from slack_sdk import WebClient
 
 # common & configuration
 import cfg.config_msgr as cnf
+from datetime import datetime
 
 # 20240830 line -> jandi default로 변경
 def send_line_message(args, line_token=cnf.LINE_TOKEN) :
@@ -68,6 +69,70 @@ def send_jandi_message (data, title="프로그램오류", jandi_token=cnf.JANDI_
 
   # Check Log
   print(response)
+
+
+def send_webex_message (msg, send_title="",send_funcnm="") :
+  webex_url = cnf.WEBEX_API_URL
+  webex_token = cnf.WEBEX_TOKEN_DB_BOT
+  webex_roomid = cnf.WEBEX_ROOMID_DEFAULT
+
+  current_dtm = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+  headers = {
+      'Authorization': f'Bearer {webex_token}'
+      ,'Content-Type': 'application/json'
+      }
+  
+  data = {
+    'roomId': webex_roomid,
+    'markdown': 'Please click the button below to confirm your attendance.',
+              'attachments': [
+                  {
+                      "contentType": "application/vnd.microsoft.card.adaptive",
+                      "content": {
+                          "type": "AdaptiveCard",
+                          "version": "1.0",
+                          "body": [                          
+                              {
+                                  "type": "TextBlock",
+                                  "text": send_title,
+                                  "weight": "Bolder",
+                                  "size": "Large"
+                              },
+                              {
+                                  "type": "TextBlock",
+                                  "spacing": "None",
+                                  "text": "Created "+ current_dtm,
+                                  "isSubtle": True,
+                                  "wrap": True
+                              },                              
+                              {
+                                  "type": "TextBlock",
+                                  "text": msg,
+                                  "wrap": True,
+                                  "spacing": "ExtraLarge"
+                              },
+                              {
+                                  "type": "TextBlock",
+                                  "text": "# function : " + send_funcnm,
+                                  "size": "Small",
+                                  "color": "Light",
+                                  "isSubtle": True,
+                                  "wrap": True,
+                                  "spacing": "ExtraLarge"
+                              }   
+                          ]
+                      }
+                  }
+              ]              
+      }
+
+  response = requests.post(webex_url, headers=headers, json=data)
+
+  if response.status_code == 200:
+      print('Webhook 생성 성공:', response.json())
+  else:
+      print('Webhook 생성 실패:', response.status_code, response.text)
 
 # Test Example
 # file_full_path = 'C:\\rdslog\\daily_check\\' + cnf.YMD + '_DMS-Daily-Report_Grafana_Daily.jpg'

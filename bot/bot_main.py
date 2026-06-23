@@ -147,6 +147,7 @@ client_msg_id = ''
 def bot_daemon():
     slack_event = json.loads(request.data)
     # print(json.dumps(slack_event["event"],indent=4))
+    
     print(slack_event)
 
     if "challenge" in slack_event:
@@ -198,7 +199,7 @@ def grafana_alaram():
             # print(data["valueString"])
             del data["valueString"]
             # print(data) # 🔥✅
-            alert_color = "yellow"
+            alert_color = "Warning"
             
             print(data)
             
@@ -209,11 +210,11 @@ def grafana_alaram():
 
                 if data_key == "status" and data_value == "firing":
                     content = "" # ★ 🔥
-                    alert_color = "RED"
+                    alert_color = "Attention"
                     title_content = "[C] "
                 elif data_key == "status" and data_value == "resolved":
                     content = "" # ☆ ✅
-                    alert_color = "GREEN"
+                    alert_color = "Good"
                     title_content = "[N] "
                 
                 if data_key == "labels":
@@ -235,18 +236,18 @@ def grafana_alaram():
                             lable_key = "파트"
                         elif lable_key == "ServerName":
                             lable_key = "서버"
-                            if alert_color == "RED": # 제일 중요하다고 판단되는 라벨의 값에 dummy 링크 씌워서 강조 표시
-                                label_value = "[" + label_value +"]()"
                             title_content = title_content + label_value + " "
+                            if alert_color == "Attention": # 제일 중요하다고 판단되는 라벨의 값에 dummy 링크 씌워서 강조 표시
+                                label_value = "[" + label_value +"]()"                            
                         elif lable_key == "리소스":
-                            if alert_color == "RED": # 제일 중요하다고 판단되는 라벨의 값에 dummy 링크 씌워서 강조 표시
-                                label_value = "[" + label_value +"]()"
                             title_content = title_content + label_value + " "
+                            if alert_color == "Attention": # 제일 중요하다고 판단되는 라벨의 값에 dummy 링크 씌워서 강조 표시
+                                label_value = "[" + label_value +"]()"                            
                         elif lable_key == "rulename":
                             lable_key = "규칙"
                         # 데이터 수집 지연 현상이 있을 때, datasource_uid 가 같이 딸려옴
                         elif lable_key == "datasource_uid":
-                            content = content + "데이터 수집 지연 현상" + "\n" 
+                            content = content + "# 데이터 수집 지연 현상" + "\n" 
                             continue
                         # 소숫점이 들어올때 2째자리 까지만 표기하도록 수정
                         elif lable_key == "현재값":
@@ -257,13 +258,13 @@ def grafana_alaram():
                             elif isinstance(label_value, float):
                                 label_value = f"{label_value:.2f}"
 
-                        content = content + lable_key + ": " + label_value + "\n"
+                        content = content + "# " + lable_key + " : " + label_value + "\n"
 
                 # 시간 표기
                 if data_key == "startsAt":
-                    content = content + "발생: " + data_value.replace("T"," ").replace("+09:00","") + "\n" 
+                    content = content + "# 발생 : " + data_value.replace("T"," ").replace("+09:00","") + "\n" 
                 elif data_key == "endsAt" and data_value != "0001-01-01T00:00:00Z":
-                    content = content + "해소: " + data_value.replace("T"," ").replace("+09:00","")[:19] + "\n" 
+                    content = content + "# 해소 : " + data_value.replace("T"," ").replace("+09:00","")[:19] + "\n" 
 
                 # grafana Expressions 데이터
                 # 참고 : thredshold는 0/1 Flag로 전달됨
@@ -272,11 +273,11 @@ def grafana_alaram():
                 elif data_key == "values" and data_value is not None:
                     for values_key, values_value in data_value.items():
                         if values_key == "임계치" and values_value == 1:
-                            values_value = "임계치 초과"
+                            values_value = "# 임계치 초과"
                         elif values_key == "임계치" and values_value == 0:
                             # values_value = "임계치 해소"
                             continue 
-                        content = content + values_key + ": " + str(values_value) + "\n"
+                        content = content + "# " + values_key + " : " + str(values_value) + "\n"
 
                 # print(data_key)
                 # print(data_value)
@@ -286,7 +287,7 @@ def grafana_alaram():
             #     title_content = "**확인필요**"
             # else:
             #     title_content = "**정상화**"                        
-            msgr.put_msgr_target(content, grp_cd="DB0003",send_title=title_content, msgr_color=alert_color)
+            msgr.put_msgr_target(content, grp_cd="DBWX03",send_title=title_content, msgr_color=alert_color, send_funcnm=func_nm())
             content = ""
             title_content = ""
 
@@ -294,7 +295,7 @@ def grafana_alaram():
             
         return make_response("There are no grafana request events", 200,) # {"X-Slack-No-Retry": 1})
     except Exception as e:
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="Attention", send_funcnm=func_nm())
 
 
 if __name__ == '__main__':
@@ -304,4 +305,4 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=5000, debug=True)
 
     except Exception as e:
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="Attention", send_funcnm=func_nm())

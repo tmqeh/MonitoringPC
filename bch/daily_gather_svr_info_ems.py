@@ -164,7 +164,7 @@ def insert_ems_svr_list(args):
 
         except Exception as e:
             # print(func_nm() + ": " + str(e))
-            msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+            msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
             # print(row_dataset)
             # print(sqlTxt)
             # return 0
@@ -241,7 +241,7 @@ def insert_ems_svr_id(args):
 
         except Exception as e:
             # print(func_nm() + ": " + str(e))
-            msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+            msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
             # print(row_dataset)
             # print(sqlTxt)
             # return 0
@@ -446,7 +446,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
     finally:
         driver.quit()

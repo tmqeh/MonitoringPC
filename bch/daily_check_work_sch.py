@@ -42,16 +42,16 @@ def get_weekend_work_sch(args=YMD):
         contents = "" 
         if result:
             for sms_txt in result :
-                contents = contents + sms_txt['DUTYNM']  + ' : ' + sms_txt['MEMBERNM'] + '\n'
+                contents = contents + '# ' + sms_txt['DUTYNM']  + ' : ' + sms_txt['MEMBERNM'] + '\n'
             # print(contents)
         
             # msgr.send_slack_message(contents, '#dba')
             # msgr.put_msgr_target(contents, grp_cd='DB0001')
-            msgr.put_msgr_target(contents.rstrip("\n"), "DB0003", send_title="**휴일 근무자 리스트**", msgr_color="GREEN")
+            msgr.put_msgr_target(contents.rstrip("\n"), "DBWX99", send_title="휴일 근무자 리스트", msgr_color="GREEN", send_funcnm=func_nm())
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] 휴일 근무자 리스트", msgr_color="RED", send_funcnm=func_nm())
         # pass
 
     finally:
@@ -63,4 +63,4 @@ if __name__ == "__main__":
         get_weekend_work_sch()
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="[Error] 휴일 근무자 리스트", msgr_color="RED", send_funcnm=func_nm())

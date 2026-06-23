@@ -76,7 +76,7 @@ def get_url(target, option_param=None):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
 
 if __name__ == "__main__":
@@ -103,8 +103,8 @@ if __name__ == "__main__":
                     get_image(url, file_full_path)
             
         # msgr.put_msgr_target("월간보고 이미지 다운로드 완료", "DB0001")
-        msgr.put_msgr_target("월간보고 이미지 다운로드 완료".rstrip("\n"), "DB0003", send_title="**월간보고 배치**", msgr_color="GREEN")
+        msgr.put_msgr_target("월간보고 이미지 다운로드 완료".rstrip("\n"), "DBWX03", send_title="**월간보고 배치**", msgr_color="GREEN", send_funcnm=func_nm())
 
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())

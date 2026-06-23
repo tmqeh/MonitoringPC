@@ -46,22 +46,23 @@ def list_meta_approval():
             result = [dict((conn.description()[i][0], value) \
                             for i, value in enumerate(row)) for row in fetchData]
             result_txt = ""
-            content="[모델표준화]\n"
+            content=""
 
             for sms_txt in result :
                 if check_weekday() != 1 and  sms_txt['결재 대기 라인'] == 'DBA' : # 화요일만 DBA 결재 표시
                     continue
                 else :
-                    content = content + '시스템 : '         + sms_txt['시스템']         + '\n'
-                    content = content + '결재 대기 라인 : ' + sms_txt['결재 대기 라인'] + '\n'
-                    content = content + '건수 : ' + str(sms_txt['건수']) + '\n'
+                    content = content + "**" + "모델 신청" + "**\n"
+                    content = content + '# 시스템 : '         + sms_txt['시스템']         + '\n'
+                    content = content + '# 결재 대기 라인 : ' + sms_txt['결재 대기 라인'] + '\n'
+                    content = content + '# 건수 : ' + str(sms_txt['건수']) + '\n'
                     # print(content)
                     
                     result_txt = result_txt + content
                     content = ""
                     
             # msgr.put_msgr_target(result_txt, 'DB0001')
-            msgr.put_msgr_target(result_txt.rstrip("\n"), "DB0005", send_title="**[모델표준화]**", msgr_color="WHITE")
+            msgr.put_msgr_target(result_txt.rstrip("\n"), "DBWX05", send_title="Metastream 결재 대기", msgr_color="Accent", send_funcnm=func_nm())
 
         conn2.execute(sqlTxt2)
         fetchData2 = conn2.fetchall()
@@ -70,29 +71,29 @@ def list_meta_approval():
             result2 = [dict((conn2.description()[i][0], value) \
                             for i, value in enumerate(row)) for row in fetchData2]
             result2_txt = ""
-            content="[데이터표준화]\n"
+            content=""
             
             for sms_txt2 in result2 :
-                if sms_txt2['시스템']:
-                    content = content + '시스템 : '     + sms_txt2['시스템']         + '\n'
                 if sms_txt2['항목구분']:
-                    content = content + '항목구분 : '   + sms_txt2['항목구분']       + '\n'
+                    content = content + "**" + "데이터표준화 - " + sms_txt2["항목구분"]       + "**\n"
+                if sms_txt2['시스템']:
+                    content = content + '# 시스템 : '     + sms_txt2['시스템']         + '\n'                
                 else:
-                    content = content + '항목구분 : '   + '단어'       + '\n'
+                    content = content + '# 항목구분 : '   + '단어'       + '\n'
 
-                content = content + '결재 대기 라인 : ' + sms_txt2['결재 대기 라인'] + '\n'
-                content = content + '건수 : ' + str(sms_txt2['건수']) + '\n'
+                content = content + '# 결재 대기 라인 : ' + sms_txt2['결재 대기 라인'] + '\n'
+                content = content + '# 건수 : ' + str(sms_txt2['건수']) + '\n'
                 # print(content)
 
                 result2_txt =  result2_txt + content
                 content = ""
             
             # msgr.put_msgr_target(result2_txt, 'DB0001')
-            msgr.put_msgr_target(result2_txt.rstrip("\n"), "DB0005", send_title="**[데이터표준화]**", msgr_color="WHITE")
+            msgr.put_msgr_target(result2_txt.rstrip("\n"), "DBWX05", send_title="Metastream 결재 대기", msgr_color="Accent", send_funcnm=func_nm())
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] Metastream", msgr_color="Attention", send_funcnm=func_nm())
         # pass
 
     finally:
@@ -108,4 +109,4 @@ if __name__ == "__main__":
             list_meta_approval()
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="[Error] Metastream", msgr_color="Attention", send_funcnm=func_nm())

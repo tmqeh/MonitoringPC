@@ -34,6 +34,17 @@ JANDI_TOKEN_MD   = '25972562/b1d5c8631e6455811ecf5fdc70ddb56a'
 JANDI_TOKEN_DEFAULT   = '25972562/d7b2d5ab0b7335d82df2f5a233211a70'
 
 # ###########################################################################
+# WEBEX configureation
+# ###########################################################################
+WEBEX_API_URL = 'https://webexapis.com/v1/messages'
+
+# DBA Metastream
+WEBEX_TOKEN_DB_BOT = 'YjZmZGZjYTQtODQwNC00NGFkLWJlNjItMjM0N2ViN2Q2YWUzZTBlMDFhNmEtOWM1_PF84_22cb7792-d880-4ec5-b6a6-649d9411bb5e'
+WEBEX_ROOMID_DEFAULT = 'Y2lzY29zcGFyazovL3VzL1JPT00vNTRlZGMxZDAtOGQwNy0xMWVmLTliZTktZDkzZTdjMmMwYThh'
+
+WEBEX_TOKEN_SE_BOT = 'ZTcwOWI0YWYtZDU4MC00MjcwLWFlNGYtMDg2OWY4Y2Y3OGJkMDA4MzNjYmUtM2Vh_PF84_22cb7792-d880-4ec5-b6a6-649d9411bb5e'
+
+# ###########################################################################
 # when Brad Test
 # ###########################################################################
 # JANDI_TOKEN_FI   = '25972562/6334bec8eba60ee951953e504cb56906'

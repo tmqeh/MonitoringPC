@@ -59,7 +59,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
         
         # self.configure_logging()
         self.is_running = True  # 초기화
-        # msgr.put_msgr_target("DBADaemon is Started.", grp_cd="DB9993", send_title=func_tree(), msgr_color="WHITE")
+        # msgr.put_msgr_target("DBADaemon is Started.", grp_cd="DBWX99", send_title=func_tree(), msgr_color="WHITE")
 
     def configure_logging(self):
         # formatter Setting
@@ -101,7 +101,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         win32event.SetEvent(self.hWaitStop)
-        # msgr.put_msgr_target("DBADaemon is Stopped.", grp_cd="DB9993", send_title=func_tree(), msgr_color="WHITE")
+        # msgr.put_msgr_target("DBADaemon is Stopped.", grp_cd="DBWX99", send_title=func_tree(), msgr_color="WHITE")
         self.is_running = False
 
     def SvcDoRun(self):
@@ -110,12 +110,12 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                               servicemanager.PYS_SERVICE_STARTED,
                               (self._svc_name_,""))
         try:
-            msgr.put_msgr_target("DBADaemon is Started.", grp_cd="DB9993", send_title=func_tree(), msgr_color="WHITE")
+            msgr.put_msgr_target("DBADaemon is Started.", grp_cd="DBWX99", send_title=func_tree(), msgr_color="WHITE", send_funcnm=func_nm())
             self.main()
         except Exception as e:
             # self.logger.error("SvcDoRun: " + str(e))
             # servicemanager.LogErrorMsg(f"Service terminated unexpectedly: {str(e)}")
-            msgr.put_msgr_target(file_nm() + f"Service terminated unexpectedly: {str(e)}", grp_cd="DB9993", send_title=func_tree(), msgr_color="WHITE")
+            msgr.put_msgr_target(file_nm() + f"Service terminated unexpectedly: {str(e)}", grp_cd="DBWX99", send_title=func_tree(), msgr_color="WHITE", send_funcnm=func_nm())
 
     def main(self):
         global GATHER_DB_INTERVAL
@@ -148,7 +148,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                 
             except Exception as e:
                 # self.logger.error("main: " + str(e), exc_info=True) # 추가적인 디버깅 정보를 위해 exc_info=True 옵션을 사용하여 스택 트레이스를 로그에 기록
-                msgr.put_msgr_target(file_nm() + " is failed : " + str(e), grp_cd="DB9993", send_title=func_tree(), msgr_color="WHITE")
+                msgr.put_msgr_target(file_nm() + " is failed : " + str(e), grp_cd="DBWX99", send_title=func_tree(), msgr_color="WHITE", send_funcnm=func_nm())
                 # added 20210907
                 # 비정상 종료 시 예외를 발생시켜 로그를 남기고 종료를 유도
                 raise # continue
@@ -158,4 +158,4 @@ if __name__ == "__main__":
     try:
         win32serviceutil.HandleCommandLine(AppServerSvc)
     except Exception as e:
-        msgr.put_msgr_target("DBADaemon is dead : " + str(e), grp_cd="DB9993", send_title=func_tree(), msgr_color="WHITE")
+        msgr.put_msgr_target("DBADaemon is dead : " + str(e), grp_cd="DBWX99", send_title=func_tree(), msgr_color="WHITE", send_funcnm=func_nm())

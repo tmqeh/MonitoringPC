@@ -1,4 +1,5 @@
 # common & configuration
+from cmn.common import get_cur_func_nm as func_nm
 from cmn.common_db import workDB
 from cmn.common_datetime import YMD
 
@@ -6,23 +7,25 @@ from cmn.common_datetime import YMD
 
 # 영업일 체크 : 책임당직이 없을 경우로 판단
 def check_working_day(args=YMD):
-    conn = workDB()
+    try :
+      conn = workDB(func_nm())
 
-    # SQL 호출
-    sqlTxt = """SELECT COUNT(1) workingChk
-                  FROM SCHEDULE A, 
-                MEMBER B
-                 WHERE B.GRADE = 2 
-                   AND B.ID = A.MEMBERID
-                   and DATEADD(DAY, +0, GETDATE()) BETWEEN STARTDATE AND ENDDATE
-                   AND CONTENT = '책임당직'
-                """ 
-    # print(sqlTxt)    
-    conn.execute(sqlTxt)
-    result = conn.fetchone()    
+      # SQL 호출
+      sqlTxt = """SELECT TOP 1 1
+                    FROM SCHEDULE A
+                   WHERE DATEADD(DAY, +0, GETDATE()) BETWEEN STARTDATE AND ENDDATE
+                     AND CONTENT = '주말근무'
+               """ 
+      #print(sqlTxt)
+      conn.execute(sqlTxt)
+      result = conn.fetchone()    
 
-    conn.close()
-    return result[0]
+      conn.close()
+      return result[0]
+    
+    except Exception as e:
+       print(e)
+       return None
 
 
 # 영업일 체크 : 책임당직이 없을 경우로 판단

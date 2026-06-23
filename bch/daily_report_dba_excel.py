@@ -49,16 +49,16 @@ def export_daily_report():
         xlapp.Quit()
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
 
 if __name__ == "__main__":
     try:
         export_daily_report()
         while check_file(FILE_HOME + TARGET_DT + FILE_NAME) == 'N':
-            msgr.put_msgr_target("DBA 일일점검보고 " + "재시도", grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="WHITE")
+            msgr.put_msgr_target("DBA 일일점검보고 " + "재시도", grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="WHITE", send_funcnm=func_nm())
                 
-        msgr.put_msgr_target(FILE_HOME + TARGET_DT + FILE_NAME + " is created", grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="WHITE")
+        msgr.put_msgr_target(FILE_HOME + TARGET_DT + FILE_NAME + " is created", grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="WHITE", send_funcnm=func_nm())
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())

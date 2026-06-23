@@ -4,7 +4,7 @@ import cmn.common_msgr_direct as msgr
 from cmn.common_db import monPC
 
 
-def put_msgr_target(args, grp_cd='DB9993', chnl_nm=None, token_val=None, img_file_path=None, send_title=None, msgr_color=None):
+def put_msgr_target(args, grp_cd='DBWX99', chnl_nm=None, token_val=None, img_file_path=None, send_title=None, msgr_color=None, send_funcnm=None):
 
     conn = monPC()
 
@@ -35,6 +35,8 @@ def put_msgr_target(args, grp_cd='DB9993', chnl_nm=None, token_val=None, img_fil
                 api_url = "https://notify-api.line.me/api/notify"
             elif result[0]["CHNL_CL_CD"] == "JD":
                 api_url = "https://wh.jandi.com/connect-api/webhook/"
+            elif result[0]["CHNL_CL_CD"] == "WX":
+                api_url = "https://webexapis.com/v1/messages"
             else:
                 msgr.send_jandi_message("common_msgr put_msgr_target: " + "매개변수 오류")
                 return
@@ -45,17 +47,30 @@ def put_msgr_target(args, grp_cd='DB9993', chnl_nm=None, token_val=None, img_fil
         # SQL 호출
         sqlTxt = """
                 insert into TB_MSG_SEND_I 
-                    ( CHNL_CL_CD, API_URL
-                    , TKN_VAL,    CHNL_NM
-                    , RSLT_CONT,  RGST_DTM
-                    , SEND_CONT,  IMG_FILE_PATH
-                    , RGPR_ID, SEND_TIT, MSGR_COLR)
-                select CHNL_CL_CD, %s as API_URL
-                    , TKN_VAL, CHNL_NM
-                    , 'Requested' as RSLT_CONT, GETDATE() as RGST_DTM
-                    , %s as SEND_CONT, %s as IMG_FILE_PATH
+                    ( CHNL_CL_CD
+                    , API_URL
+                    , TKN_VAL
+                    , CHNL_NM
+                    , RSLT_CONT
+                    , RGST_DTM
+                    , SEND_CONT
+                    , IMG_FILE_PATH
+                    , RGPR_ID
+                    , SEND_TIT
+                    , MSGR_COLR
+                    , REQ_FUN_NM)
+                select CHNL_CL_CD
+                    , %s as API_URL
+                    , TKN_VAL
+                    , CHNL_NM
+                    , 'Requested' as RSLT_CONT
+                    , GETDATE() as RGST_DTM
+                    , %s as SEND_CONT
+                    , %s as IMG_FILE_PATH
                     , 'put_msgr_target' -- 여기는 소스명
-                    , %s as SEND_TIT, %s as MSGR_COLR
+                    , %s as SEND_TIT
+                    , %s as MSGR_COLR
+                    , %s as REQ_FUN_NM
                   from TB_MSG_CHNL_M
                 where GRP_CD = %s -- 여기가 변수
               """
@@ -92,26 +107,40 @@ def put_msgr_target(args, grp_cd='DB9993', chnl_nm=None, token_val=None, img_fil
         # SQL 호출
         sqlTxt = """
                 insert into TB_MSG_SEND_I 
-                    ( CHNL_CL_CD, API_URL
-                    , TKN_VAL,    CHNL_NM
-                    , RSLT_CONT,  RGST_DTM
-                    , SEND_CONT,  IMG_FILE_PATH
-                    , RGPR_ID, SEND_TIT, MSGR_COLR)
-                values (%s, %s 
-                      , %s, %s
-                      , 'Requested', GETDATE()
-                      , %s , %s 
-                      , 'put_msgr_target' -- 여기는 소스명
-                      , %s , %s 
+                    ( CHNL_CL_CD
+                    , API_URL
+                    , TKN_VAL
+                    , CHNL_NM
+                    , RSLT_CONT
+                    , RGST_DTM
+                    , SEND_CONT
+                    , IMG_FILE_PATH
+                    , RGPR_ID
+                    , SEND_TIT
+                    , MSGR_COLR
+                    , REQ_FUN_NM)
+                values 
+                     ( %s
+                     , %s 
+                     , %s
+                     , %s
+                     , 'Requested'
+                     , GETDATE()
+                     , %s 
+                     , %s 
+                     , 'put_msgr_target' -- 여기는 소스명
+                     , %s 
+                     , %s
+                     , %s 
                       )
               """
     try:
         if not grp_cd == None:
-            conn.execute(sqlTxt, (api_url, args, img_file_path, send_title, msgr_color, grp_cd))
+            conn.execute(sqlTxt, (api_url, args, img_file_path, send_title, msgr_color, send_funcnm, grp_cd))
 
         else:  # grp_cd == None & chnl_nm != None
             # print(sqlTxt)
-            conn.execute(sqlTxt, (chnl_cl_cd, api_url, token_val, chnl_nm, args, img_file_path, send_title, msgr_color))
+            conn.execute(sqlTxt, (chnl_cl_cd, api_url, token_val, chnl_nm, args, img_file_path, send_title, msgr_color, send_funcnm))
         conn.commit()
 
     except Exception as e:
@@ -123,5 +152,5 @@ def put_msgr_target(args, grp_cd='DB9993', chnl_nm=None, token_val=None, img_fil
 
 # put_msgr_target('슬랙 이미지 파일 전송 테스트', 'DB0001', img_file_path=r'C:\rdslog\daily_check\20230112083001_daily_check_etc_dr_Grafana_Daily.jpg')
 # put_msgr_target('슬랙 텍스트 전송 테스트', 'DB0001')
-# put_msgr_target('블루', 'DB9993', send_title='타이틀 테스트', msgr_color='BLUE')
-# put_msgr_target('그린', 'DB9993', send_title='타이틀 테스트')
+# put_msgr_target('블루', 'DBWX99', send_title='타이틀 테스트', msgr_color='BLUE')
+# put_msgr_target('그린', 'DBWX99', send_title='타이틀 테스트')

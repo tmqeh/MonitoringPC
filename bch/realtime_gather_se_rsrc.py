@@ -60,8 +60,8 @@ def insert_srv_rsrc_log(args):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
-        msgr.put_msgr_target(func_tree() + ": " + str(e), grp_cd="SE0001",send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
+        msgr.put_msgr_target(func_tree() + ": " + str(e), grp_cd="SE0001",send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
         return 0
 
     finally:
@@ -115,7 +115,7 @@ def insert_srv_fs_log(args):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
         msgr.put_msgr_target(func_tree() + ": " + str(e), grp_cd="SE0001",send_title="**" + func_nm() + "**", msgr_color="RED")
         return 0
 
@@ -188,7 +188,7 @@ def insert_srv_stat_log(args, collect_ymd):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
         msgr.put_msgr_target(func_tree() + ": " + str(e), grp_cd="SE0001",send_title="**" + func_nm() + "**", msgr_color="RED")
         return 0
 
@@ -226,6 +226,7 @@ def insert_bak_stat_log(args, collect_ymd):
             UPDATE SET    A.Type           = %s
                         , A.State          = %s
                         , A.Status         = %s
+                        , A.Policy         = %s
                         , A.Schedule       = %s
                         , A.Client         = %s
                         , A.Dest_Media_Svr = %s
@@ -297,7 +298,7 @@ def insert_bak_stat_log(args, collect_ymd):
                        , Group,         Owner,          Parent_JobID,   Policy_Type,  Retention
                        , Schedule_Type, CollectDT
                            ######### for update
-                       , Type, State, Status, Schedule, Client
+                       , Type, State, Status, Policy, Schedule, Client
                        , Dest_Media_Svr, Ended, Elapsed, Kilobytes, KB_Per_Sec
                        , Active_Elapsed, Active_PID, Attempt, Backup_Type, Completion
                        , Compression, Dedupe_Ratio, Dest_StUnit, Group, Owner
@@ -310,7 +311,7 @@ def insert_bak_stat_log(args, collect_ymd):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
         msgr.put_msgr_target(func_nm() + ": " + str(e), grp_cd="SE0001",send_title="**" + func_nm() + "**", msgr_color="RED")
         return 0
 
@@ -376,7 +377,7 @@ def read_log():
 
                 # to file move to err
                 else :
-                    msgr.put_msgr_target("file name is inaccurate: " + f, grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+                    msgr.put_msgr_target("file name is inaccurate: " + f, grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
                     msgr.put_msgr_target("file name is inaccurate: " + f, grp_cd="SE0001", send_title="**" + func_nm() + "**", msgr_color="RED")
                     success_Flag = 0
                     
@@ -391,7 +392,7 @@ def read_log():
             else : 
                 os.rename(TARGET_PATH + '/' + f, ERR_PATH + '/' + f)
                 # print("fail")
-                msgr.put_msgr_target("file name task is failed : " + f, grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+                msgr.put_msgr_target("file name task is failed : " + f, grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED")
                 msgr.put_msgr_target("file name task is failed : " + f, grp_cd="SE0001", send_title="**" + func_nm() + "**", msgr_color="RED")
 
 

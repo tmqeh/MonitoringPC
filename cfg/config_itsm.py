@@ -7,11 +7,13 @@
 DELAY_TIME = 5
 DWP_LOGIN_URL = "https://dwp.lotte.net/Group/LoginPage.bzr" 
 DWP_USER_ID = "L21065"
-DWP_USER_PASSWORD = "RLAWLSDN03!"
+DWP_USER_PASSWORD = "gvvRTU,Fug"
 
 MOIN_URL = "https://dwp.lotte.net/Group/Portal/Enterprise/DefaultPage.bzr"
-ITSM_LOGIN_URL = "https://nitsm.lotte.net/index.jsp"
-GET_ITSM_URL = 'https://nitsm.lotte.net/.lxp?target=csr&method=getDivCsrRequestList'
+# ITSM_LOGIN_URL = "https://nitsm.lotte.net/index.jsp"
+ITSM_LOGIN_URL = "https://itsm.lotte.net/ko/slo/sloLogin?v=koI4BBYnj1Bi4um5RS-2oqUIwmvslEH-3qSPIpJ5MCvZ9aFf6WZ5oxkeV1ZA8h1ynC8zRTVhDfc9FEgQknVuDLgtOateGbigKb3BqWrZ_a-RL0rVsw40raEhMvO9p7QhwO7PNKL9WMBLp6kVXcA20agMn3LKCU6wOg17dtwQTAE%3D"
+# GET_ITSM_URL = 'https://nitsm.lotte.net/.lxp?target=csr&method=getDivCsrRequestList'
+GET_ITSM_URL = "https://itsm.lotte.net/api/proxy?path=https%3A%2F%2Fitsm.lotte.net%2Fapi%2Fv1%2Fcsr%2Fmanagement%2Fprogress&pageCategory=dept&pageStep=all&searchCompCd=&searchReqTypeLclas=&searchReqTypeSclas=&searchTrgetSysCd=SYS2024120400043&searchDeptCd=&searchStatus=&reqDtType=reqDt&reqStrtDt=2025-12-05&reqEndDt=2026-01-05&searchType=title&searchTxt=&isCsrSeprChecked=false&isRejectChecked=false&isDelayChecked=false&isUrgentChecked=false&isClosingChecked=false&isReqRejectChecked=false&isMngr=true&compCd=COM071800&deptCd=COM07180002156&userId=L21065%40lotte.net&roleId=A000B003&managedGroupId=COM071800202103233"
 DOWNLOAD_FILE_NAME = "전체요청목록"
 EXCEL_EXT = ".xlsx"
 
@@ -97,49 +99,49 @@ ITSM_HEADERS = {
             "X-Requested-With": "XMLHttpRequest",
         }
 
-DEFAULT_GROUP_CD = "DB9993"
+DEFAULT_GROUP_CD = "DBWX99"
 
 # 파트의 서비스별로 메시지 전송 그룹 지정
 # 개발 단계, 관리자에게만 문자 (분할 전송)
 PART_SVC_MAPPING = {
-    "DB9993": ["IT_경영지원 Part > 그룹웨어",
+    "DBWX99": ["IT_경영지원 Part > 그룹웨어",
                "IT_경영지원 Part > 기업문화",
                "IT_경영지원 Part > 동료사원",
                "IT_경영지원 Part > 메일/메신저",
                "IT_경영지원 Part > 전산의뢰",
                "IT_경영지원 Part > 전자결재",
                "IT_경영지원 Part > 형상관리",],
-    "DB9993": ["IT_경영지원 Part > 인사",
+    "DBWX99": ["IT_경영지원 Part > 인사",
                "IT_경영지원 Part > HQ인사",],
-    "DB9993": ["IT_마케팅 Part > 근거리배송시스템",
+    "DBWX99": ["IT_마케팅 Part > 근거리배송시스템",
                "IT_마케팅 Part > 배송시스템",],
-    "DB9993": ["IT_마케팅 Part > 문화센터시스템",],
-    "DB9993": ["IT_마케팅 Part > 법인영업시스템",
+    "DBWX99": ["IT_마케팅 Part > 문화센터시스템",],
+    "DBWX99": ["IT_마케팅 Part > 법인영업시스템",
                "IT_마케팅 Part > 비즈마일리지",
                "IT_마케팅 Part > 사은시스템",
                "IT_마케팅 Part > 에누리시스템",
                "IT_마케팅 Part > 통합AS시스템",],
-    "DB9993": ["IT_상품권 Part > 상품권시스템",],
-    "DB0004": ["IT_인프라 Part > 데이터베이스",],  # 이거 때문에 세부 카테고리까지 봄
-    "DB9993": ["IT_인프라 Part > 보안",],  # 이거 때문에 세부 카테고리까지 봄
-    "DB9993": ["IT_재무 Part > 구매",
+    "DBWX99": ["IT_상품권 Part > 상품권시스템",],
+    "DBWX04": ["IT_인프라 Part > 데이터베이스",],  # 이거 때문에 세부 카테고리까지 봄
+    "DBWX99": ["IT_인프라 Part > 보안",],  # 이거 때문에 세부 카테고리까지 봄
+    "DBWX99": ["IT_재무 Part > 구매",
                "IT_재무 Part > 웹전표",],
-    "DB9993": ["IT_재무 Part > ERP(SAP) - 손익",
+    "DBWX99": ["IT_재무 Part > ERP(SAP) - 손익",
                "IT_재무 Part > ERP(SAP) - 자금",
                "IT_재무 Part > ERP(SAP) - 해외",
                "IT_재무 Part > ERP(SAP) - 회계",
                "IT_재무 Part > ERP(SAP) - G/L계정생성",],
-    "DB9993": ["IT_재무 Part > SAP HANA 시스템",],
-    "DB9993": ["IT_MD Part > 거래선SCM",
+    "DBWX99": ["IT_재무 Part > SAP HANA 시스템",],
+    "DBWX99": ["IT_MD Part > 거래선SCM",
                "IT_MD Part > 파트너포탈",
                "IT_MD Part > 파트너포탈-모바일",],
-    "DB9993": ["IT_POS Part > POS시스템-개발",
+    "DBWX99": ["IT_POS Part > POS시스템-개발",
                "IT_POS Part > POS시스템-매출",],
-    "DB9993": ["IT_MD Part > 영업분석시스템",],
-    "DB9993": ["IT_MD Part > 영업통합시스템-기준정보",],
-    "DB9993": ["IT_MD Part > 영업통합시스템-매입정산",],
-    "DB9993": ["IT_MD Part > 영업통합시스템-영업매출",],
-    "DB9993": ["IT_MD Part > 영업통합시스템-온라인",],
+    "DBWX99": ["IT_MD Part > 영업분석시스템",],
+    "DBWX99": ["IT_MD Part > 영업통합시스템-기준정보",],
+    "DBWX99": ["IT_MD Part > 영업통합시스템-매입정산",],
+    "DBWX99": ["IT_MD Part > 영업통합시스템-영업매출",],
+    "DBWX99": ["IT_MD Part > 영업통합시스템-온라인",],
 }
 # # 파트의 서비스별로 메시지 전송 그룹 지정
 # PART_SVC_MAPPING = {
@@ -161,7 +163,7 @@ PART_SVC_MAPPING = {
 #                "IT_마케팅 Part > 에누리시스템",
 #                "IT_마케팅 Part > 통합AS시스템",],
 #     "GC9993": ["IT_상품권 Part > 상품권시스템",],
-#     "DB9993": ["IT_인프라 Part > 데이터베이스",],  # 이거 때문에 세부 카테고리까지 봄
+#     "DBWX99": ["IT_인프라 Part > 데이터베이스",],  # 이거 때문에 세부 카테고리까지 봄
 #     "SC9991": ["IT_인프라 Part > 보안",],  # 이거 때문에 세부 카테고리까지 봄
 #     "IF9991": ["IT_재무 Part > 구매",
 #                "IT_재무 Part > 웹전표",],

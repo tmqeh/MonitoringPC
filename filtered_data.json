@@ -1,0 +1,17 @@
+[
+  {
+    "reqTitle": "[상품권Part] 현송사 마트 장입 재고 데이터 반영 프로시저 수정",
+    "reqTypeLclasNm": "시스템변경/개발",
+    "reqTypeSclasNm": "DB 변경 요청(정규)",
+    "reqDt": "2026-01-05",
+    "endPlanDt": null,
+    "csrNo": "CSR0718002601056930",
+    "curProcsStep": "02",
+    "reqDeptNm": "IT_상품권 Part",
+    "reqUserId": "L26211@lotte.net",
+    "reqUserNm": "정태현",
+    "curWorkflowLseq": 1,
+    "maxWorkflowLseq": 3,
+    "status": ""
+  }
+]

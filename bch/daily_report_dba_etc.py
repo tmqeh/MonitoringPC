@@ -34,4 +34,4 @@ if __name__ == "__main__":
                     msgr.put_msgr_target(data['title'], grp_cd='DB0001', img_file_path=file_full_path)
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())

@@ -59,17 +59,17 @@ def itsm_login():
     driver.get(ITSM_LOGIN_URL)
     
     # ID, PW 입력
-    driver.find_element(By.ID, "user_id").send_keys(DWP_USER_ID)
-    driver.find_element(By.ID, "user_pwd").send_keys(DWP_USER_PASSWORD)
+    # driver.find_element(By.ID, "user_id").send_keys(DWP_USER_ID)
+    # driver.find_element(By.ID, "user_pwd").send_keys(DWP_USER_PASSWORD)
 
     # 계열사 선택
-    Select(driver.find_element(By.NAME, "search_type")).select_by_value("023400")
+    # Select(driver.find_element(By.NAME, "search_type")).select_by_value("023400")
     
     # 로그인 버튼 클릭
-    driver.find_element(By.CLASS_NAME, "btn_login").click()
+    # driver.find_element(By.CLASS_NAME, "btn_login").click()
 
     # 완료 대기
-    driver.implicitly_wait(DELAY_TIME)
+    # driver.implicitly_wait(DELAY_TIME)
     # 필수 대기
     # ★ sleep 없이 implicitly_wait만 주면 데이터가 안나올때도 있음
     time.sleep(3)
@@ -113,10 +113,10 @@ def list_itsm_xml(driver, SEARCH_CL_CD="01"):
         df_xml = pd.DataFrame(data_set, columns=column_list) # column_list 없으면 데이터 없을 때 열이 통째로 누락 발생함
         return df_xml
 
-        # msgr.put_msgr_target("download finished", "DB9993", send_title="itsm 요청리스트", msgr_color="GREEN")
+        # msgr.put_msgr_target("download finished", "DBWX99", send_title="itsm 요청리스트", msgr_color="GREEN")
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
         pass
 
 
@@ -275,18 +275,17 @@ def insert_itsm_request_log(args):
 
                 if prev_step is not None and grp_cd is not None:
                     if any(item in step for item in ["요청승인", "검토승인"]) and "요청접수" in next_stat:
-                        content = "[ITSM 요청]() " + req_tp_nm + "(" + dtl_req_tp_nm + ")" + "\n"
+                        content = "**" + req_tp_nm + "(" + dtl_req_tp_nm + ")" + "**\n"
                     if "접수승인" in step and "처리결과" in next_stat:
                         content = "[ITSM 작업]() " + req_tp_nm + "(" + dtl_req_tp_nm + ")" + "\n"
                     
-                    content = content + "내용 : " + tit + "\n"
-                    content = content + "요청자 : " + reqpr_nm + " (" + req_dpt_nm + ")" + "\n"
+                    content = content + "# 내용 : " + tit + "\n"
+                    content = content + "# 요청 : " + reqpr_nm + " (" + req_dpt_nm + ")" + "\n"
 
                     if "접수승인" in step and any(item in step for item in ["처리결과", "작업계획"]) in next_stat:
-                        content = content + "작업자 : " + wrkr_id + "\n"
+                        content = content + "# 작업 : " + wrkr_id + "\n"
                         
-                    content += "완료희망일자 : " + cmpl_hope_dt + "\n"
-                    content += "서비스카탈로그 : " + svc_catalog + "\n"
+                    content += "# 일자 : " + cmpl_hope_dt + "\n"
                     content = content + "\n" # 여러개 발생 시, 개행 시켜서 보기 편하게
 
                     GROUP_CONTENT[grp_cd] += str(content)
@@ -313,7 +312,7 @@ def insert_itsm_request_log(args):
                             exmnr_id, exmn_cmpl_dt, exmn_tm))
 
         # if content: # 단일 전송에서 담당별 전송으로 변경
-        #     msgr.put_msgr_target(content.rstrip("\n"), grp_cd="DB9993", send_title="**ITSM 신규요청**", msgr_color="YELLOW")
+        #     msgr.put_msgr_target(content.rstrip("\n"), grp_cd="DBWX99", send_title="**ITSM 신규요청**", msgr_color="YELLOW")
         
         # 각 그룹별로 메시지 전송
         # 임시 중지 
@@ -321,11 +320,11 @@ def insert_itsm_request_log(args):
         # DBA만 받기 위해서는 grp_cd 또는 PART_SVC_MAPPING 에서 "데이터베이스" 만 조건 처리하여 전송
         for grp_cd, content in GROUP_CONTENT.items():
             if content:
-                if grp_cd == "DB0004": # DBA꺼만 시범 운영
+                if grp_cd == "DBWX04": # DBA꺼만 시범 운영
                     # msgr.put_msgr_target(content.rstrip("\n"), grp_cd)
-                    msgr.put_msgr_target(content.rstrip("\n"), "DB0004", send_title="**전산의뢰**", msgr_color="GREEN")
+                    msgr.put_msgr_target(content.rstrip("\n"), "DBWX04", send_title="ITSM 요청", msgr_color="Good", send_funcnm=func_nm())
                 # else : # for debugging
-                    # msgr.put_msgr_target(content.rstrip("\n"), "DB9993", send_title="**전산의뢰**", msgr_color="YELLOW")
+                    # msgr.put_msgr_target(content.rstrip("\n"), "DBWX99", send_title="**전산의뢰**", msgr_color="YELLOW")
                 # msgr.put_msgr_target(content.rstrip("\n"), grp_cd=grp_cd, send_title="**ITSM 신규요청**", msgr_color="YELLOW")
         
         # even MS-SQL need it (MUST)
@@ -333,7 +332,7 @@ def insert_itsm_request_log(args):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
         # pass
 
     finally:
@@ -359,7 +358,7 @@ def delete_itsm_reject_log(args):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
         # print(req_no)
         # pass
 
@@ -392,7 +391,7 @@ def list_itsm_db_data():
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] ITSM Alert", msgr_color="Attention", send_funcnm=func_nm())
         # print(req_no)
         # pass
 
@@ -408,24 +407,31 @@ def get_itsm_request_status_and_send_alert(conn, req_no, step): # row["요청번
       FROM TB_ITSM_REQ_L (nolock) 
      WHERE REQ_NO = %s
             """
+    
+    errCheck = ""
+
     try:
         result = str("".join(conn.query(sqlTxt, req_no)[0])).encode("ISO-8859-1").decode("euc-kr")
         # step에 "검토승인" 추가 (next_step이 "접수"인 case)
         # 기존 데이터가 "%요청%", "%검토%", "%접수%" 인 상태에서 새로 수집한 데이터가 "요청승인", "검토승인", "%접수%" 일 경우 
+        errCheck = "step0"
+
         if result is not None and result != step:
         # if any(item in result for item in ["요청", "검토", "접수"]) and any(item in step for item in ["요청승인", "검토승인", "접수"]) and result != step:
+            errCheck = "step1"
             return result
-            # msgr.put_msgr_target(req_no + " is ready to progress.", grp_cd="DB9993", send_title="**ITSM 신규요청**", msgr_color="YELLOW")
+            # msgr.put_msgr_target(req_no + " is ready to progress.", grp_cd="DBWX99", send_title="**ITSM 신규요청**", msgr_color="YELLOW")
         
         # 기존 데이터가 없고 새로 수집한 데이터가 "요청승인", "검토승인", "%접수%" 일 경우 
         elif result is None : # and result != step:
+            errCheck = "step2"
             return "신규"
         
         return None
     
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e) + "\n" + errCheck, grp_cd="DBWX99", send_title="[Error] ITSM Alert", msgr_color="Attention", send_funcnm=func_nm())
         pass
 
 
@@ -435,8 +441,10 @@ if __name__ == "__main__":
     df_db_data = list_itsm_db_data()
     
     try:
-        driver = itsm_login()
-
+        pass
+        """
+        ##2025.02.24 ITSM 2.0 전환에 따른 기능 중지
+        driver = itsm_login()        
         #######################
         # 반려, 취소건 삭제
         #######################
@@ -471,9 +479,9 @@ if __name__ == "__main__":
         driver.quit() # webdriver 종료
         end = time.time()
         print(f"{end - start:.5f} sec")
-        # msgr.put_msgr_target(f"{end - start:.5f} sec", grp_cd="DB9993", send_title="**ITSM**", msgr_color="GREEN")
-
+        # msgr.put_msgr_target(f"{end - start:.5f} sec", grp_cd="DBWX99", send_title="**ITSM**", msgr_color="GREEN")
+        """
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.put_msgr_target(str(e), grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(str(e), grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
         pass

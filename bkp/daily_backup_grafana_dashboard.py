@@ -3,6 +3,7 @@ import requests
 import json
 import yaml
 from datetime import datetime
+import urllib3
 
 # common & configuration
 import cfg.config_grafana as cnf
@@ -10,6 +11,7 @@ import cmn.common_msgr as msgr
 from cmn.common import get_cur_func_nm as func_nm, get_cur_file_nm as file_nm, get_func_tree as func_tree
 from cfg.config_path import BACKUP_DIR
 from cfg.config_grafana import GRAFANA_HOST as HOST
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DETAIL_DIR = "grafana_json/MonitoringPC"
 FULL_DIR = BACKUP_DIR + DETAIL_DIR
@@ -34,7 +36,7 @@ def get_dashboard_list(key, host):
         else:
             return '{} ERROR: HTTP {} {}'.format(time, r.status_code, url)
     except Exception as e:
-        msgr.put_msgr_target("daily_backup_grafana_dashboard get_dashboard_list except : " + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target("daily_backup_grafana_dashboard get_dashboard_list except : " + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
 
 def get_folder_list(key, host):
@@ -54,7 +56,7 @@ def get_folder_list(key, host):
         else:
             return '{} ERROR: HTTP {} {}'.format(time, r.status_code, url)
     except Exception as e:
-        msgr.put_msgr_target("daily_backup_grafana_dashboard get_folder_list except : " + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target("daily_backup_grafana_dashboard get_folder_list except : " + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
 
 def backup_dashboard(uid, key, host, path):
@@ -91,25 +93,26 @@ def backup_dashboard(uid, key, host, path):
         else:
             return '{} ERROR: HTTP {} {}'.format(time, r.status_code, url)
     except Exception as e:
-        msgr.put_msgr_target("daily_backup_grafana_dashboard backup_dashboard except : " + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target("daily_backup_grafana_dashboard backup_dashboard except : " + str(e), grp_cd="DBWX99", send_title="**" + func_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
 
 
 if __name__ == "__main__":
+    
     # https://github.com/AndrewOcamps/grafana-dashboard-backup
     try:
         folder_list = get_folder_list(cnf.GRAFANA_API, HOST)
         
         for folder_name in folder_list:
             path = os.path.join(FULL_DIR, folder_name['title'])
-            
+
             check_dir(path)
             
             for dashboard_list in get_dashboard_list(cnf.GRAFANA_API, HOST):
                 if "folderUid" in dashboard_list:
                     if folder_name['uid'] == dashboard_list['folderUid']:
                         print(backup_dashboard(dashboard_list['uid'], cnf.GRAFANA_API, HOST, path))
-
     except yaml.YAMLError as e:
-        msgr.put_msgr_target("daily_backup_grafana_dashboard yaml except : ", grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target("daily_backup_grafana_dashboard yaml except : ", grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())
     except Exception as e:
-        msgr.put_msgr_target("daily_backup_grafana_dashboard except : ", grp_cd="DB9993", send_title="**" + file_nm() + "**", msgr_color="RED")
+        print(e)
+        msgr.put_msgr_target("daily_backup_grafana_dashboard except : ", grp_cd="DBWX99", send_title="**" + file_nm() + "**", msgr_color="RED", send_funcnm=func_nm())

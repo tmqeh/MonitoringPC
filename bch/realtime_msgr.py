@@ -6,6 +6,7 @@ import os # for os.path.getsize
 import cmn.common_msgr_direct as msgr # for DB down (sending direct)
 from cmn.common import get_cur_func_nm as func_nm, get_cur_file_nm as file_nm, get_func_tree as func_tree
 import cmn.common_db as db
+import cfg.config_msgr as cnf
 
 
 # korean needs    .encode('ISO-8859-1').decode('euc-kr') for array
@@ -31,7 +32,18 @@ def parse_response(response):
 def get_msgr_target(conn):
     # cursor = conn.cursor
 
-    sqlTxt = """ select SEND_SEQNO, CHNL_CL_CD, API_URL, TKN_VAL, CHNL_NM, SEND_CONT, RSLT_CONT, IMG_FILE_PATH, SEND_TIT, MSGR_COLR
+    sqlTxt = """ select SEND_SEQNO
+                      , CHNL_CL_CD
+                      , API_URL
+                      , TKN_VAL
+                      , CHNL_NM
+                      , SEND_CONT
+                      , RSLT_CONT
+                      , IMG_FILE_PATH
+                      , SEND_TIT
+                      , MSGR_COLR
+                      , CONVERT(VARCHAR, RGST_DTM, 120) AS RGST_DTM
+                      , REQ_FUN_NM
                    from TB_MSG_SEND_I
                   where RSLT_CONT = 'Requested'
              """
@@ -139,20 +151,36 @@ def move_msgr_results(args, conn):
 
     sqlTxt = """
                 insert into dbo.TB_MSG_SEND_L 
-                     ( SEND_SEQNO,    CHNL_CL_CD
-                     , API_URL,      TKN_VAL,   CHNL_NM
-                     , SEND_CONT,    RSLT_CONT
+                     ( SEND_SEQNO
+                     , CHNL_CL_CD
+                     , API_URL
+                     , TKN_VAL
+                     , CHNL_NM
+                     , SEND_CONT
+                     , RSLT_CONT
                      , IMG_FILE_PATH
-                     , SEND_TIT,     MSGR_COLR
-                     , RGPR_ID,      RGST_DTM
-                     , MDFPR_ID,     MDF_DTM)
-                select SEND_SEQNO,    CHNL_CL_CD
-                     , API_URL,      TKN_VAL,   CHNL_NM
-                     , SEND_CONT,    RSLT_CONT
+                     , SEND_TIT
+                     , MSGR_COLR
+                     , RGPR_ID
+                     , RGST_DTM
+                     , MDFPR_ID
+                     , MDF_DTM
+                     , REQ_FUN_NM)
+                select SEND_SEQNO
+                     , CHNL_CL_CD
+                     , API_URL
+                     , TKN_VAL
+                     , CHNL_NM
+                     , SEND_CONT
+                     , RSLT_CONT
                      , IMG_FILE_PATH
-                     , SEND_TIT,     MSGR_COLR
-                     , RGPR_ID,      RGST_DTM
-                     , MDFPR_ID,     MDF_DTM
+                     , SEND_TIT
+                     , MSGR_COLR
+                     , RGPR_ID
+                     , RGST_DTM
+                     , MDFPR_ID
+                     , MDF_DTM
+                     , REQ_FUN_NM
                   from TB_MSG_SEND_I
                  where SEND_SEQNO = %d
                    -- and RSLT_CONT = 'Finished'
@@ -273,13 +301,91 @@ def send_msg(args):
             response = requests.post(url=jandi_url, data=msg, headers=header)
             # Check response
             return parse_response(response.json())
+        
+        elif args['CHNL_CL_CD'] == 'WX': # WEBEX
+            webex_url = args['API_URL']
+
+            webex_chnl_nm = args['CHNL_NM']
+
+            if webex_chnl_nm[0:2] == "DB" : 
+                webex_token = cnf.WEBEX_TOKEN_DB_BOT
+            elif webex_chnl_nm[0:2] == "SE" : 
+                webex_token = cnf.WEBEX_TOKEN_SE_BOT                
+            else :
+                webex_token = cnf.WEBEX_TOKEN_DB_BOT
+
+            webex_roomid = args['TKN_VAL']
+
+            if args['MSGR_COLR'] is None :
+                args['MSGR_COLR'] = "Default"
+
+            if args['REQ_FUN_NM'] is None :
+                args['REQ_FUN_NM'] = "function is Null. Check Function : put_msgr_target"
+
+            headers = {
+                'Authorization': f'Bearer {webex_token}'
+                ,'Content-Type': 'application/json'
+                }
+            
+            data = {
+              'roomId': webex_roomid,
+              'markdown': 'Please click the button below to confirm your attendance.',
+              'attachments': [
+                  {
+                      "contentType": "application/vnd.microsoft.card.adaptive",
+                      "content": {
+                          "type": "AdaptiveCard",
+                          "version": "1.0",
+                          "body": [                          
+                              {
+                                  "type": "TextBlock",
+                                  "text": args['SEND_TIT'],
+                                  "weight": "Bolder",
+                                  "size": "Large",
+                                  "color": args['MSGR_COLR']
+                              },
+                              {
+                                  "type": "TextBlock",
+                                  "spacing": "None",
+                                  "text": "Created "+ args['RGST_DTM'],
+                                  "isSubtle": True,
+                                  "wrap": True
+                              },                              
+                              {
+                                  "type": "TextBlock",
+                                  "text": args['SEND_CONT'],
+                                  "wrap": True,
+                                  "spacing": "ExtraLarge"
+                              },
+                              {
+                                  "type": "TextBlock",
+                                  "text": "# function : " + args['REQ_FUN_NM'],
+                                  "size": "Small",
+                                  "color": "Light",
+                                  "isSubtle": True,
+                                  "wrap": True,
+                                  "spacing": "ExtraLarge"
+                              }                              
+                          ]
+                      }
+                  }
+              ] 
+                }
+
+            response = requests.post(webex_url, headers=headers, json=data)       
+            
+            if response.status_code == 200:
+                print('Webhook 생성 성공:', response.json())
+            else:
+                print('Webhook 생성 실패:', response.status_code, response.text)
+                msgr.send_webex_message('realtime_msgr parse_response :' + "알수없는 json 형태입니다.", send_title="메세지 전송 에러", send_funcnm=func_nm())
 
         else:
-            msgr.send_jandi_message('realtime_msgr send_msg: ' + '규격에 맞지 않는 데이터입니다.')
+            msgr.send_webex_message('realtime_msgr send_msg: ' + '규격에 맞지 않는 데이터입니다.', send_title="메세지 전송 에러", send_funcnm=func_nm())
             
     except Exception as e:
         # print(func_nm() + ": " + args['CHNL_CL_CD'] +' ' + args['IMG_FILE_PATH'] + '\n' + str(e))
-        msgr.send_jandi_message(func_tree() + ":\n" + args['CHNL_CL_CD'] +' ' + args['IMG_FILE_PATH'] + '\n' + str(e))
+        msgr.send_webex_message(func_tree() + ":\n" + args['CHNL_CL_CD'] +' ' + args['IMG_FILE_PATH'] + '\n' + str(e), send_title="메세지 전송 에러", send_funcnm=func_nm())
 
     finally:
         # msgr.send_jandi_message('send_msg Finished')
@@ -312,7 +418,7 @@ if __name__ == "__main__":
         
     except Exception as e:
         # print(file_nm() + ": " + str(e))
-        msgr.send_jandi_message(file_nm() + ": " + str(e))
+        msgr.send_webex_message(file_nm() + ": " + str(e), send_title="메세지 전송 에러", send_funcnm=func_nm())
         
     finally:
         conn.close()

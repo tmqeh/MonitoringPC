@@ -16,21 +16,21 @@ OLD_PATH       = LOG_HOME + "old"
 TARGET_PATH    = LOG_HOME 
 NETBACKUP_PATH = LOG_HOME + "Netbackup"
 
-# SE0001 : SE 잔디
-TARGET_LIST = [{"파트명" :"MD",      "GRP_CD":"MD0004", "서버리스트" :["lpsisdb01", "lpsisdb02", "lpbakdb01", "lpdwsdb01",  "lpbatap01"
+# SEWX01 : WX 잔디
+TARGET_LIST = [{"파트명" :"MD",      "GRP_CD":"MDWX03", "서버리스트" :["lpsisdb01", "lpsisdb02", "lpbakdb01", "lpdwsdb01",  "lpbatap01"
                                                                       ,"lpcfmap01", "lpeaiin01", "lpetlap01", "lpsisap01",  "lpsiswi01"
                                                                       ,"lpeaiex01", "lpediww01", "lpsiswo01", ]}
-             , {"파트명" :"POS",     "GRP_CD":"PS0003", "서버리스트" :["lpscsdb01", "lppomap01", "lppomap02"]}
-             , {"파트명" :"마케팅",   "GRP_CD":"MK0003", "서버리스트" :["cul-sqldb", "lpdlvdb01", "lpdlvdb02", "lpenr-sqlclt-t", "lpgms-sqldb"]}
-             , {"파트명" :"상품권",   "GRP_CD":"GC0003", "서버리스트" :["lpgcsdb01"]}
-             , {"파트명" :"경영지원", "GRP_CD":"HR0003", "서버리스트" :["ld-hrdb01",  "ld-hrdb02",  "ld-imdb1",     "lpea-sqldb",   "ld-hrap01"
+             , {"파트명" :"POS",     "GRP_CD":"PSWX03", "서버리스트" :["LPSCSDB", "lppomap01", "lppomap02"]}
+             , {"파트명" :"마케팅",   "GRP_CD":"MKWX03", "서버리스트" :["cul-sqldb", "lpdlvdb01", "lpdlvdb02", "lpenr-sqlclt-t", "lpgms-sqldb"]}
+             , {"파트명" :"상품권",   "GRP_CD":"GCWX03", "서버리스트" :["LPGCSDB"]}
+             , {"파트명" :"경영지원", "GRP_CD":"HRWX03", "서버리스트" :["ld-hrdb01",  "ld-hrdb02",  "ld-imdb1",     "lpea-sqldb",   "ld-hrap01"
                                                                       ,"ld-hrap02",  "ld-hrif",    "ld-hrinweb01", "ld-hrinweb02", "ldps"
                                                                       ,"ld-hrmob01", "ld-hrmob02", "ld-hrweb01",   "ld-hrweb02",]}
               ]
 
-NETBACKUP_RSRC_LIST = ["B5150","B5250"]
+NETBACKUP_RSRC_LIST = ["B5250","B5150"]
 B5150_TARGET_CNT = "60"
-B5250_TARGET_CNT = "126"
+B5250_TARGET_CNT = "125"
 
 
 def insert_netbackup_media_log(args):
@@ -153,53 +153,12 @@ def insert_netbackup_media_log(args):
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
-        # msgr.put_msgr_target(func_nm() + ": " + str(e), grp_cd="SE0001",send_title="daily_report_se_netbackup insert_srv_stat_log 오류", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] " + func_nm(), msgr_color="RED", send_funcnm=func_nm())
+        # msgr.put_msgr_target(func_nm() + ": " + str(e), grp_cd="SEWX01",send_title="daily_report_se_netbackup insert_srv_stat_log 오류", msgr_color="RED")
         return 0
 
     finally:
         sqlTxt = ""
-        conn.close()
-
-def send_netbackup_media_stat():
-    conn = monPC(func_nm())
-    content = ""
-    alert_color = "GREEN"
-    sqlTxt = """SELECT replace(Disk_Pool_Name,'dp_disk_','') + ' : ' + convert(varchar,Use_Pct) + '%' 
-                     + ' (' + convert(varchar,ceiling((Total_Capacity_GB-Free_Space_GB)/1024))+ 'TB / ' 
-                     + convert(varchar,ceiling(Total_Capacity_GB/1024)) + 'TB)' as content, Use_Pct
-                  FROM [dbo].[TB_Bak_Media_Stat_L]
-                 WHERE CollectDT = convert(varchar,getdate(),112)
-             """
-    try: # 숫자는 %d, 문자는 %s를 사용
-        data = conn.query(sqlTxt)
-
-        if conn.rows() > 0:
-            results = [dict((conn.description()[i][0], value) 
-                            for i, value in enumerate(row)) for row in data]
-        
-        for i, result in enumerate(results):
-            # 임계치
-            if (alert_color == "YELLOW" or alert_color == "GREEN") and int(result["Use_Pct"]) >= 95:
-                alert_color = "RED"
-                result["content"] = "[" + result["content"] + "]()" # [내용](공백)으로 잔디 링크 써서 강조 표시
-            elif int(result["Use_Pct"]) >= 80:
-                alert_color = "YELLOW"
-                result["content"] = "[" + result["content"] + "]()" # [내용](공백)으로 잔디 링크 써서 강조 표시
-
-            content = content + result["content"]
-            if i == len(results) -1:
-                continue
-            else:
-                content = content + "\n"
-
-        msgr.put_msgr_target(content, "SE0001", send_title = "**Netbackup 미디어 상태**", msgr_color=alert_color)
-
-    except Exception as e:
-        # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
-
-    finally:
         conn.close()
 
 
@@ -224,7 +183,7 @@ def list_netbakcup_stat(args=None):
     
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] " + func_nm(), msgr_color="RED", send_funcnm=func_nm())
 
     finally:
         conn.close()
@@ -236,7 +195,8 @@ def send_netbackup_stat(args, data):
     # "정상"과 "심각"으로 바로 리스트 append 및 메시지 전송
 
     list_normal   = [] # 정상 완료 리스트
-    list_critical = [] # 심각 상태 리스트
+    list_progress = [] # 진행중 상태 리스트
+    list_critical = [] # 에러 상태 리스트
 
     try:
         # create_netbackup_alert_content & send_netbackup_stat 로 찢을 수 있음
@@ -244,48 +204,111 @@ def send_netbackup_stat(args, data):
         for result in data:
             if result["Client"] in args["서버리스트"]:
                 if result["Status"] == "0" or result["Status"] == "1":
-                    list_normal.append({"title": result["Client"], "description": "완료 일시 : " + result["Ended"]})
+                    list_normal.append({"title": result["Client"], "description": result["Ended"]})
                 elif result["Status"] == "":
-                    list_critical.append({"title": result["Client"], "description": "진행 중"})
+                    list_progress.append({"title": result["Client"], "description": "진행중"})
                 else:
-                    list_critical.append({"title": result["Client"], "description": "상태 코드 : " + result["Status"]})
+                    list_critical.append({"title": result["Client"], "description": "상태 코드 (" + result["Status"] + ")"})
 
         # 정상 메시지 발송
         if list_normal:
             message_content = ""
             for i, message in enumerate(list_normal):
-                message_content = message_content + "**" + message["title"] + "**" + "\n" + message["description"]
+                message_content = message_content + "# " + message["title"] + " : " + message["description"]
                 if i == len(list_normal)-1 : # 마지막줄은 개행 추가 안함
                     continue
                 else :
-                    message_content = message_content + "\n\n"
+                    message_content = message_content + "\n"
 
             if args["파트명"] != "마케팅": # 마케팅 정상 메시지 제외 요청
-                msgr.put_msgr_target(message_content, args["GRP_CD"], send_title = "**" + args["파트명"] + " Netbackup 정상**", msgr_color = "GREEN")
+                msgr.put_msgr_target(message_content, args["GRP_CD"], send_title = args["파트명"] + " Netbackup 완료", msgr_color = "Accent", send_funcnm=func_nm())
 
-        # 심각 메시지 발송
+        # 진행중 메시지 발송
+        if list_progress:
+            message_content = ""
+            for i, message in enumerate(list_progress):
+                message_content = message_content +  "# " + message["title"]
+                if i == len(list_progress)-1 : # 마지막줄은 개행 추가 안함
+                    continue
+                else :
+                    message_content = message_content + "\n"
+            # 파트별
+            msgr.put_msgr_target(message_content, args["GRP_CD"], send_title = args["파트명"] + " Netbackup 진행중", msgr_color = "Attention", send_funcnm=func_nm())
+
+            # SE
+            msgr.put_msgr_target(message_content, "SEWX01", send_title = "Netbackup 진행중", msgr_color = "Accent", send_funcnm=func_nm())
+
+        # 에러 메시지 발송
         if list_critical:
             message_content = ""
             for i, message in enumerate(list_critical):
-                message_content = message_content + "**" + message["title"] + "**" + "\n" + message["description"]
+                message_content = message_content + "# " + message["title"] + " : " + message["description"]
                 if i == len(list_critical)-1 : # 마지막줄은 개행 추가 안함
                     continue
                 else :
-                    message_content = message_content + "\n\n"
-            # 파티별 + SE       
-            msgr.put_msgr_target(message_content, args["GRP_CD"], send_title = "**" + args["파트명"] + " Netbackup 확인필요**", msgr_color = "RED")
-            msgr.put_msgr_target(message_content, "SE0001", send_title = "**Netbackup 확인 필요**", msgr_color = "RED")
+                    message_content = message_content + "\n"
+            # 파트별
+            msgr.put_msgr_target(message_content, args["GRP_CD"], send_title = args["파트명"] + " Netbackup Error", msgr_color = "Attention", send_funcnm=func_nm())
+
+            # SE
+            msgr.put_msgr_target(message_content, "SEWX01", send_title = "Netbackup Error", msgr_color = "Attention", send_funcnm=func_nm())
 
     except Exception as e:
         # print(func_nm() + ": " + str(e))
-        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DB9993", send_title="**" + func_nm() + "**", msgr_color="RED")
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] Netbackup Alert", msgr_color="Attention", send_funcnm=func_nm())
 
+def send_netbackup_media_stat():
+    conn = monPC(func_nm())
+    content = ""
+    alert_color = "Accent"
+    sqlTxt = """
+            SELECT CASE WHEN replace(Disk_Pool_Name,'dp_disk_','') = 'lpnbak02' then 'lpnbak02(B5250)'
+			            WHEN replace(Disk_Pool_Name,'dp_disk_','') = 'lpnbakme01' then 'lpnbakme01(B5150)'
+				        ELSE replace(Disk_Pool_Name,'dp_disk_','') 
+				   END as hostname
+                  ,convert(varchar,Use_Pct) + '%' 
+	               + ' (' + convert(varchar,ceiling((Total_Capacity_GB-Free_Space_GB)/1024)) + 'TB '
+	               + '/ ' + convert(varchar,ceiling(Total_Capacity_GB/1024)) + 'TB)' as content
+                  , Use_Pct
+             FROM [dbo].[TB_Bak_Media_Stat_L]
+            WHERE CollectDT = convert(varchar,getdate(),112)
+             """
+    try: # 숫자는 %d, 문자는 %s를 사용
+        data = conn.query(sqlTxt)
+
+        if conn.rows() > 0:
+            results = [dict((conn.description()[i][0], value) 
+                            for i, value in enumerate(row)) for row in data]
+        
+        for i, result in enumerate(results):
+            # 임계치
+            if (alert_color == "Warning" or alert_color == "Accent") and int(result["Use_Pct"]) >= 95:
+                alert_color = "Attention"
+                result["content"] = "[" + result["content"] + "]()" # [내용](공백)으로 잔디 링크 써서 강조 표시
+            elif int(result["Use_Pct"]) >= 80:
+                alert_color = "Warning"
+                result["content"] = "[" +  result["content"] + "]()" # [내용](공백)으로 잔디 링크 써서 강조 표시
+
+            content = content + "# " + result["hostname"] + " : " + result["content"]
+            if i == len(results) -1:
+                continue
+            else:
+                content = content + "\n"
+
+        msgr.put_msgr_target(content, "SEWX01", send_title = "Netbackup 볼륨 점검", msgr_color=alert_color, send_funcnm=func_nm())
+
+    except Exception as e:
+        # print(func_nm() + ": " + str(e))
+        msgr.put_msgr_target(func_tree() + ":\n" + str(e), grp_cd="DBWX99", send_title="[Error] Netbackup 볼륨 점검", msgr_color="Attention", send_funcnm=func_nm())
+
+    finally:
+        conn.close()
 
 # B5150     : 정상 상태 수
 # B5250     : 정상 상태 수
 def list_netbackup_resource():
     content = ""
-    alert_color = "GREEN"
+    alert_color = "Accent"
 
     for target in NETBACKUP_RSRC_LIST:
         full_path = NETBACKUP_PATH + "/" + target + TXT_EXT
@@ -297,26 +320,28 @@ def list_netbackup_resource():
                 for i, line in enumerate(lines):
                     line = line.strip()
 
-                    if target == "B5150":
-                        if line.strip() != B5150_TARGET_CNT:
-                            alert_color = "RED"
-                            content = content + "B5150 하드웨어 상태 : " + "[" + line + " / " + B5150_TARGET_CNT + "]()\n" # [내용](공백)으로 잔디 링크 써서 강조 표시
-                        else : 
-                            content = content + "B5150 하드웨어 상태 : " + line + " / " + B5150_TARGET_CNT + "\n"
-                    
-                    elif target == "B5250":
+                    if target == "B5250":
                         if line.strip() != B5250_TARGET_CNT:
-                            alert_color = "RED"
-                            content = content + "B5250 하드웨어 상태 : " + "[" + line + " / " + B5250_TARGET_CNT + "]()\n" # [내용](공백)으로 잔디 링크 써서 강조 표시
+                            alert_color = "Attention"
+                            content = content + "# lpnbak02(B5250) : " + "[" + line + " / " + B5250_TARGET_CNT + "]()\n" # [내용](공백)으로 잔디 링크 써서 강조 표시
                         else : 
-                            content = content + "B5250 하드웨어 상태 : " + line + " / " + B5250_TARGET_CNT + "\n"
+                            content = content + "# lpnbak02(B5250) : " + line + " / " + B5250_TARGET_CNT + "\n"
+
+                    elif target == "B5150":
+                        if line.strip() != B5150_TARGET_CNT:
+                            alert_color = "Attention"
+                            content = content + "# lpnbakme01(B5150) : " + "[" + line + " / " + B5150_TARGET_CNT + "]()" # [내용](공백)으로 잔디 링크 써서 강조 표시
+                        else : 
+                            content = content + "# lpnbakme01(B5150) : " + line + " / " + B5150_TARGET_CNT + ""
+                    
+
 
             os.rename(full_path, OLD_PATH + "/" + NETBACKUP_YMD + "_" + target + TXT_EXT) # with open sytanx include close at the end of loop
 
         else:
-            msgr.put_msgr_target("not exist file : " + full_path, "DB9993", send_title = "list_netbackup_resource err", msgr_color = "RED")
+            msgr.put_msgr_target("not exist file : " + full_path, "DBWX99", send_title = "[Error] Netbackup Alert", msgr_color = "Attention", send_funcnm=func_nm())
     
-    msgr.put_msgr_target(content, "SE0001", send_title = "**Netbackup 미디어 하드웨어 상태**", msgr_color = alert_color)
+    msgr.put_msgr_target(content, "SEWX01", send_title = "Netbackup 하드웨어 점검", msgr_color = alert_color, send_funcnm=func_nm())
 
 def read_log():
     # 파일 리스트 호출
@@ -337,8 +362,8 @@ def read_log():
                 success_Flag = insert_netbackup_media_log(data)
                 
             else : # B5150, B5250 파일은 *.txt로 떨어지기 때문에 *.log에서 애초에 걸러짐
-                msgr.put_msgr_target("file name is inaccurate: " + f, "DB9993", send_title="**" + func_nm() + "**", msgr_color = "RED")
-                # msgr.put_msgr_target("file name is inaccurate: " + f, grp_cd="SE0001",send_title="daily_report_se_netbackup read_log 오류", msgr_color="RED")
+                msgr.put_msgr_target("file name is inaccurate: " + f, "DBWX99", send_title="**" + func_nm() + "**", msgr_color = "RED", send_funcnm=func_nm())
+                # msgr.put_msgr_target("file name is inaccurate: " + f, grp_cd="SEWX01",send_title="daily_report_se_netbackup read_log 오류", msgr_color="RED")
                 success_Flag = 0
                     
 
@@ -352,7 +377,7 @@ def read_log():
             else : 
                 os.rename(NETBACKUP_PATH + "/" + f, ERR_PATH + "/" + f) # to file move to err
                 # print("fail")
-                msgr.put_msgr_target("daily_report_se_netbackup read_log() file name task is failed : " + f, "DB9993", send_title="**" + func_nm() + "**", msgr_color = "RED")
+                msgr.put_msgr_target("daily_report_se_netbackup read_log() file name task is failed : " + f, "DBWX99", send_title="**" + func_nm() + "**", msgr_color = "RED", send_funcnm=func_nm())
 
 
 # MAIN
